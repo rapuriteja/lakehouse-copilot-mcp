@@ -1,0 +1,70 @@
+name: Deploy to Azure
+
+# Manual only: deploying creates paid Azure resources.
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Databricks bundle target
+        type: choice
+        options: [dev, prod]
+        default: dev
+      apply:
+        description: Apply the Terraform plan (otherwise plan only)
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write # OIDC login to Azure, no stored passwords
+  contents: read
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }} # add required reviewers on the GitHub environment
+    defaults:
+      run:
+        working-directory: infra/terraform
+    outputs:
+      databricks_host: ${{ steps.out.outputs.databricks_host }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      - name: Terraform init (remote state)
+        run: |
+          cp backend.tf.example backend.tf
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ secrets.TFSTATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.TFSTATE_STORAGE_ACCOUNT }}"
+      - run: terraform plan -input=false -var="environment=${{ inputs.target }}" -out=tfplan
+      - if: inputs.apply
+        run: terraform apply -input=false tfplan
+      - id: out
+        if: inputs.apply
+        run: echo "databricks_host=$(terraform output -raw databricks_workspace_url)" >> "$GITHUB_OUTPUT"
+
+  databricks-bundle:
+    runs-on: ubuntu-latest
+    needs: infrastructure
+    if: inputs.apply
+    environment: ${{ inputs.target }}
+    env:
+      DATABRICKS_HOST: ${{ needs.infrastructure.outputs.databricks_host }}
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: databricks/setup-cli@main
+      - run: databricks bundle validate -t ${{ inputs.target }}
+      - run: databricks bundle deploy -t ${{ inputs.target }}
