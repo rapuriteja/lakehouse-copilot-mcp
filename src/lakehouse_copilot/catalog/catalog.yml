@@ -49,9 +49,9 @@ tables:
     columns:
       - {name: customer_sk, type: bigint, description: Surrogate key of this customer version. -1 is the unknown customer.}
       - {name: customer_id, type: string, description: Business id of the customer, like C00042. Same for all versions; count customers with COUNT(DISTINCT customer_id).}
-      - {name: full_name, type: string, description: First and last name.}
-      - {name: email, type: string, description: Latest email address (Type 1, same on every version).}
-      - {name: phone, type: string, description: Latest Indian mobile number with +91 prefix.}
+      - {name: full_name, type: string, pii: true, description: First and last name. PII, hidden from the copilot.}
+      - {name: email, type: string, pii: true, description: Latest email address (Type 1, same on every version). PII, hidden from the copilot.}
+      - {name: phone, type: string, pii: true, description: Latest Indian mobile number with +91 prefix. PII, hidden from the copilot.}
       - {name: city, type: string, description: "City the customer lived in during this version, such as Mumbai, Bengaluru, Chennai.", examples: [Mumbai, Chennai, Hyderabad]}
       - {name: state, type: string, description: Indian state of the city.}
       - {name: region, type: string, description: "Region of India. One of North, South, East, West, Central."}

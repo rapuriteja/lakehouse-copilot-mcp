@@ -46,7 +46,7 @@ def build_chunks(catalog: Catalog) -> list[Chunk]:
                 text=(
                     f"Table {t.name}. {t.description} Grain: {t.grain}. "
                     f"Primary key: {t.primary_key}. Joins: {joins}. "
-                    f"Columns: {', '.join(c.name for c in t.columns)}."
+                    f"Columns: {', '.join(c.name for c in t.public_columns)}."
                 ),
                 source_type="table",
                 source_name=t.name,

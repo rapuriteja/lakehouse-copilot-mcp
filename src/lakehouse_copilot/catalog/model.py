@@ -17,6 +17,7 @@ class Column:
     type: str
     description: str
     examples: tuple[str, ...] = ()
+    pii: bool = False  # personal data: never exposed to the copilot
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,11 @@ class Table:
 
     def column(self, name: str) -> Column | None:
         return next((c for c in self.columns if c.name == name), None)
+
+    @property
+    def public_columns(self) -> tuple[Column, ...]:
+        """Columns the copilot may see and query (everything except PII)."""
+        return tuple(c for c in self.columns if not c.pii)
 
 
 @dataclass(frozen=True)
@@ -81,6 +87,10 @@ class Catalog:
     def table_names(self) -> list[str]:
         return [t.name for t in self.tables]
 
+    @property
+    def pii_columns(self) -> set[str]:
+        return {c.name for t in self.tables for c in t.columns if c.pii}
+
 
 def _parse(raw: dict) -> Catalog:
     tables = tuple(
@@ -96,6 +106,7 @@ def _parse(raw: dict) -> Catalog:
                     type=c["type"],
                     description=c["description"],
                     examples=tuple(str(e) for e in c.get("examples", [])),
+                    pii=bool(c.get("pii", False)),
                 )
                 for c in t["columns"]
             ),
