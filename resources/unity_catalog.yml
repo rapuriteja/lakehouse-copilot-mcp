@@ -1,0 +1,26 @@
+# Schemas (one per medallion layer) and the landing volume for raw files.
+resources:
+  schemas:
+    landing:
+      catalog_name: ${var.catalog}
+      name: landing
+      comment: Raw source files as they arrive (Unity Catalog volume).
+    bronze:
+      catalog_name: ${var.catalog}
+      name: bronze
+      comment: Raw data as Delta tables, every column a string, plus ingest metadata.
+    silver:
+      catalog_name: ${var.catalog}
+      name: silver
+      comment: Cleaned, deduplicated and validated data, SCD2 customers, quarantine tables.
+    gold:
+      catalog_name: ${var.catalog}
+      name: gold
+      comment: Star schema and aggregates. The only layer the copilot can query.
+
+  volumes:
+    raw:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.landing.name}
+      name: raw
+      comment: Landing zone for source CSV and JSON files.

@@ -1,0 +1,82 @@
+# The pipeline as a job with one task per layer, so each layer has its own logs,
+# retries and run time in the Jobs UI.
+resources:
+  jobs:
+    medallion_pipeline:
+      name: lakehouse-copilot-medallion
+      max_concurrent_runs: 1
+      schedule:
+        quartz_cron_expression: "0 0 2 * * ?" # 02:00 every day
+        timezone_id: Asia/Kolkata
+        pause_status: PAUSED
+      email_notifications:
+        on_failure: []
+      tags:
+        project: lakehouse-copilot
+
+      job_clusters:
+        - job_cluster_key: single_node
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type}
+            num_workers: 0
+            data_security_mode: SINGLE_USER # required for Unity Catalog
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: singleNode
+            custom_tags:
+              ResourceClass: SingleNode
+
+      tasks:
+        - task_key: generate_data
+          description: Write synthetic source files into the landing volume (demo only).
+          job_cluster_key: single_node
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["generate", "--catalog", "${var.catalog}"]
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: bronze
+          depends_on: [{task_key: generate_data}]
+          job_cluster_key: single_node
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["bronze", "--catalog", "${var.catalog}"]
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: silver
+          depends_on: [{task_key: bronze}]
+          job_cluster_key: single_node
+          max_retries: 1
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["silver", "--catalog", "${var.catalog}"]
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: gold
+          depends_on: [{task_key: silver}]
+          job_cluster_key: single_node
+          max_retries: 1
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["gold", "--catalog", "${var.catalog}"]
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: publish_docs
+          description: Copy catalog.yml into Unity Catalog table/column comments and PII tags.
+          depends_on: [{task_key: gold}]
+          job_cluster_key: single_node
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["publish-docs", "--catalog", "${var.catalog}"]
+          libraries:
+            - whl: ../dist/*.whl

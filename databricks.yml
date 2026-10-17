@@ -1,0 +1,45 @@
+# Databricks Asset Bundle: deploys the medallion pipeline as a Databricks job.
+#
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run      -t dev medallion_pipeline
+#
+# Before the first deploy, create the Unity Catalog catalog once (see README,
+# "Deploy to Azure"). The bundle then creates the schemas, the landing volume and the job.
+
+bundle:
+  name: lakehouse-copilot
+
+variables:
+  catalog:
+    description: Unity Catalog catalog that holds bronze, silver and gold.
+    default: lakehouse_copilot
+  node_type:
+    description: VM size for the single-node job cluster.
+    default: Standard_D4ds_v5
+  spark_version:
+    description: Databricks Runtime (17.x ships Spark 4).
+    default: 17.3.x-scala2.13
+
+artifacts:
+  lakehouse_copilot_wheel:
+    type: whl
+    path: .
+    build: python -m pip wheel --no-deps -w dist .
+
+include:
+  - resources/*.yml
+
+targets:
+  # The workspace host comes from the DATABRICKS_HOST environment variable or your
+  # Databricks CLI profile, so no URL is hard-coded here.
+  dev:
+    mode: development # resources get a [dev <user>] prefix; schedules are paused
+    default: true
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: lakehouse_copilot
