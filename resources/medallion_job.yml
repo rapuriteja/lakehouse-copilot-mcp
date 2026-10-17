@@ -27,6 +27,26 @@ resources:
             custom_tags:
               ResourceClass: SingleNode
 
+        # Same small cluster, plus the keys. {{secrets/...}} is resolved by Databricks at
+        # cluster start from the Key Vault-backed scope; the values never appear in the job
+        # definition, the UI or the logs (Databricks redacts them).
+        - job_cluster_key: single_node_with_keys
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type}
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.master: "local[*, 4]"
+              spark.databricks.cluster.profile: singleNode
+            spark_env_vars:
+              OPENROUTER_API_KEY: "{{secrets/${var.secret_scope}/openrouter-api-key}}"
+              AZURE_SEARCH_API_KEY: "{{secrets/${var.secret_scope}/azure-search-api-key}}"
+              AZURE_SEARCH_ENDPOINT: ${var.search_endpoint}
+              EMBEDDING_PROVIDER: openrouter
+            custom_tags:
+              ResourceClass: SingleNode
+
       tasks:
         - task_key: generate_data
           description: Write synthetic source files into the landing volume (demo only).
@@ -80,3 +100,15 @@ resources:
             parameters: ["publish-docs", "--catalog", "${var.catalog}"]
           libraries:
             - whl: ../dist/*.whl
+
+        - task_key: index_search
+          description: Embed the catalog docs with OpenRouter and upload them to Azure AI Search.
+          depends_on: [{task_key: publish_docs}]
+          job_cluster_key: single_node_with_keys
+          python_wheel_task:
+            package_name: lakehouse_copilot
+            entry_point: lakehouse-job
+            parameters: ["index-search"]
+          libraries:
+            - whl: ../dist/*.whl
+            - pypi: {package: "azure-search-documents>=11.6"}

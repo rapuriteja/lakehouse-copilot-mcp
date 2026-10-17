@@ -4,8 +4,9 @@
 #   databricks bundle deploy   -t dev
 #   databricks bundle run      -t dev medallion_pipeline
 #
-# Before the first deploy, create the Unity Catalog catalog once (see README,
-# "Deploy to Azure"). The bundle then creates the schemas, the landing volume and the job.
+# Before the first deploy, create the Unity Catalog catalog and the Key Vault-backed secret
+# scope once (see AZURE_SETUP.md). The bundle then creates the schemas, the landing volume
+# and the job.
 
 bundle:
   name: lakehouse-copilot
@@ -20,6 +21,12 @@ variables:
   spark_version:
     description: Databricks Runtime (17.x ships Spark 4).
     default: 17.3.x-scala2.13
+  secret_scope:
+    description: Key Vault-backed secret scope with openrouter-api-key and azure-search-api-key.
+    default: lakehouse-copilot
+  search_endpoint:
+    description: Azure AI Search endpoint (terraform output azure_search_endpoint).
+    default: ""
 
 artifacts:
   lakehouse_copilot_wheel:

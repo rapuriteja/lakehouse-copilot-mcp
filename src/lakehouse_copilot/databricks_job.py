@@ -8,9 +8,12 @@ separate tasks in the Databricks Jobs UI, with their own logs and retries:
     lakehouse-job silver   --catalog lakehouse_copilot
     lakehouse-job gold     --catalog lakehouse_copilot
     lakehouse-job publish-docs --catalog lakehouse_copilot
+    lakehouse-job index-search   # catalog chunks -> Azure AI Search, embedded via OpenRouter
 
 On Databricks the tables are Delta tables in Unity Catalog: <catalog>.<layer>.<table>.
 Raw files land in a Unity Catalog volume: /Volumes/<catalog>/landing/raw.
+Keys (OpenRouter, AI Search) reach the job as environment variables from a Key
+Vault-backed secret scope, set on the job cluster in resources/medallion_job.yml.
 """
 
 from __future__ import annotations
@@ -46,12 +49,32 @@ def catalog_comment_statements(catalog: Catalog, uc_catalog: str) -> list[str]:
     return statements
 
 
+def index_search(settings=None) -> int:
+    """Embed the catalog chunks (EMBEDDING_PROVIDER, OpenRouter by default) and upload them."""
+    from lakehouse_copilot.catalog.docs import build_chunks
+    from lakehouse_copilot.config import get_settings
+    from lakehouse_copilot.rag.azure import AzureSearchIndexer
+
+    settings = settings or get_settings()
+    if not settings.azure_search_endpoint:
+        raise SystemExit("AZURE_SEARCH_ENDPOINT is not set (bundle variable search_endpoint).")
+    indexer = AzureSearchIndexer.from_settings(settings)
+    chunks = build_chunks(load_catalog())
+    return indexer.index(chunks, settings.azure_search_index, settings.embedding_dimensions)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="lakehouse-job")
-    parser.add_argument("step", choices=["generate", "bronze", "silver", "gold", "publish-docs"])
+    parser.add_argument(
+        "step", choices=["generate", "bronze", "silver", "gold", "publish-docs", "index-search"]
+    )
     parser.add_argument("--catalog", default="lakehouse_copilot", help="Unity Catalog name")
     parser.add_argument("--raw-dir", default=None, help="default: /Volumes/<catalog>/landing/raw")
     args = parser.parse_args(argv)
+
+    if args.step == "index-search":
+        print(f"Indexed {index_search()} chunks in Azure AI Search.")
+        return
 
     raw_dir = args.raw_dir or f"/Volumes/{args.catalog}/landing/raw"
     spark = get_spark()

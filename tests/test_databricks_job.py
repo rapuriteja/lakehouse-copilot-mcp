@@ -17,3 +17,13 @@ def test_comments_escape_quotes() -> None:
     statements = catalog_comment_statements(load_catalog(), "c")
     brand = next(s for s in statements if "COLUMN brand COMMENT" in s)
     assert "Haldiram\\'s" in brand  # the apostrophe cannot break the SQL string
+
+
+def test_index_search_needs_an_endpoint() -> None:
+    import pytest
+
+    from lakehouse_copilot.config import Settings
+    from lakehouse_copilot.databricks_job import index_search
+
+    with pytest.raises(SystemExit, match="AZURE_SEARCH_ENDPOINT"):
+        index_search(Settings(_env_file=None))

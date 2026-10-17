@@ -31,8 +31,14 @@ jobs:
     defaults:
       run:
         working-directory: infra/terraform
+    env:
+      # Written to Key Vault by Terraform (secret openrouter-api-key). Never echoed.
+      TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+      # Object id of the AzureDatabricks app in your tenant (see AZURE_SETUP.md).
+      TF_VAR_azure_databricks_sp_object_id: ${{ vars.AZURE_DATABRICKS_SP_OBJECT_ID }}
     outputs:
       databricks_host: ${{ steps.out.outputs.databricks_host }}
+      search_endpoint: ${{ steps.out.outputs.search_endpoint }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -49,7 +55,9 @@ jobs:
         run: terraform apply -input=false tfplan
       - id: out
         if: inputs.apply
-        run: echo "databricks_host=$(terraform output -raw databricks_workspace_url)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "databricks_host=$(terraform output -raw databricks_workspace_url)" >> "$GITHUB_OUTPUT"
+          echo "search_endpoint=$(terraform output -raw azure_search_endpoint)" >> "$GITHUB_OUTPUT"
 
   databricks-bundle:
     runs-on: ubuntu-latest
@@ -67,4 +75,6 @@ jobs:
           python-version: "3.12"
       - uses: databricks/setup-cli@main
       - run: databricks bundle validate -t ${{ inputs.target }}
-      - run: databricks bundle deploy -t ${{ inputs.target }}
+      - run: >-
+          databricks bundle deploy -t ${{ inputs.target }}
+          --var="search_endpoint=${{ needs.infrastructure.outputs.search_endpoint }}"
