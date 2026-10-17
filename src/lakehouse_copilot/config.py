@@ -40,7 +40,15 @@ class Settings(BaseSettings):
     azure_search_api_key: SecretStr | None = None
     azure_search_index: str = "lakehouse-catalog"
 
-    # Azure OpenAI (embeddings now, chat model for the agent later)
+    # Chat model for the agent: offline (rule-based planner), azure, or any
+    # OpenAI-compatible endpoint (for example a local Ollama server)
+    llm_provider: Literal["offline", "azure", "openai"] = "offline"
+    azure_openai_chat_deployment: str = "gpt-4o-mini"
+    openai_base_url: str | None = None
+    openai_api_key: SecretStr | None = None
+    openai_model: str = "gpt-4o-mini"
+
+    # Azure OpenAI (chat + embeddings)
     azure_openai_endpoint: str | None = None
     azure_openai_api_key: SecretStr | None = None
     azure_openai_api_version: str = "2024-10-21"
