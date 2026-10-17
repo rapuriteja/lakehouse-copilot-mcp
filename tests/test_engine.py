@@ -10,10 +10,8 @@ from lakehouse_copilot.sql.engine import DatabricksEngine, DuckDBEngine
 
 
 def test_serving_db_has_all_tables_without_pii(serving_db: Path) -> None:
-    con = duckdb.connect(str(serving_db), read_only=True)
-    cols = con.execute(
-        "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema='gold'"
-    ).fetchall()
+    sql = "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema='gold'"
+    cols = DuckDBEngine(serving_db).execute(sql, 1000).rows
     tables = {t for t, _ in cols}
     assert tables == {t.short_name for t in load_catalog().tables}
     assert not {c for _, c in cols} & {"email", "phone", "full_name"}
