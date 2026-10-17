@@ -16,10 +16,15 @@ dependencies = [
     "pyarrow>=15",
     "pyyaml>=6",
     "pydantic-settings>=2.2",
+    "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]
 spark = ["pyspark>=4.0,<5"]
+azure = [
+    "azure-search-documents>=11.6",
+    "openai>=1.50",
+]
 dev = [
     "lakehouse-copilot[spark]",
     "pytest>=8",
