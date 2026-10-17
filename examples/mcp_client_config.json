@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "lakehouse-copilot": {
+      "command": "/absolute/path/to/lakehouse-copilot-mcp/.venv/bin/lhc",
+      "args": ["mcp"],
+      "cwd": "/absolute/path/to/lakehouse-copilot-mcp"
+    }
+  }
+}
