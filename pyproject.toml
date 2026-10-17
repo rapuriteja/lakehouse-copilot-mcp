@@ -17,6 +17,9 @@ dependencies = [
     "pyyaml>=6",
     "pydantic-settings>=2.2",
     "scikit-learn>=1.4",
+    "duckdb>=1.1",
+    "sqlglot>=25",
+    "mcp>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +28,7 @@ azure = [
     "azure-search-documents>=11.6",
     "openai>=1.50",
 ]
+databricks = ["databricks-sql-connector>=3.4"]
 dev = [
     "lakehouse-copilot[spark]",
     "pytest>=8",

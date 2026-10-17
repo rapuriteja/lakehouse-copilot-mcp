@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     # Data generator
     seed: int = 42
 
+    # SQL engine: local DuckDB serving layer, or a Databricks SQL warehouse
+    query_engine: Literal["duckdb", "databricks"] = "duckdb"
+    duckdb_path: Path = Path("lakehouse/serving.duckdb")
+    sql_row_limit: int = 200
+    sql_timeout_seconds: float = 20.0
+    databricks_host: str | None = None
+    databricks_http_path: str | None = None
+    databricks_token: SecretStr | None = None
+    databricks_catalog: str = "lakehouse_copilot"
+
     # Retrieval: local TF-IDF or Azure AI Search (hybrid + semantic ranker)
     retriever: Literal["local", "azure"] = "local"
     azure_search_endpoint: str | None = None
