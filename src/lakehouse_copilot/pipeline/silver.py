@@ -158,7 +158,6 @@ def clean_customers(bronze: DataFrame) -> tuple[DQOutcome, int, DataFrame]:
             type1=CUSTOMER_TYPE1,
             effective_col="updated_at",
         )
-        dim = dim.localCheckpoint()  # cut the lineage so each fold stays cheap
     return outcome, removed, dim
 
 
