@@ -18,7 +18,7 @@ tables:
       - gold.fact_sales.product_sk = gold.dim_product.product_sk
     columns:
       - {name: order_item_id, type: string, description: Unique id of the order line. Primary key.}
-      - {name: order_id, type: string, description: Order id. One order can have several lines, so count orders with COUNT(DISTINCT order_id).}
+      - {name: order_id, type: string, description: "Order id. One order can have several lines, so count orders with COUNT(DISTINCT order_id)."}
       - {name: date_key, type: int, description: Order date as yyyymmdd. Joins to gold.dim_date.date_key.}
       - {name: order_ts, type: timestamp, description: Exact time the order was placed (UTC).}
       - {name: customer_sk, type: bigint, description: Surrogate key of the customer version valid on the order date. Joins to gold.dim_customer.customer_sk.}
@@ -29,7 +29,7 @@ tables:
       - {name: quantity, type: int, description: Number of units of the product on this line. Always greater than zero.}
       - {name: unit_price, type: "decimal(12,2)", description: List price of one unit in INR at the time of the order.}
       - {name: discount_pct, type: "decimal(5,2)", description: Discount on this line in percent (0 to 100). Festive season discounts are higher.}
-      - {name: gross_amount, type: "decimal(14,2)", description: quantity * unit_price in INR, before discount.}
+      - {name: gross_amount, type: "decimal(14,2)", description: "quantity * unit_price in INR, before discount."}
       - {name: discount_amount, type: "decimal(14,2)", description: Discount given on this line in INR.}
       - {name: net_amount, type: "decimal(14,2)", description: Amount the customer paid for the line in INR (gross_amount - discount_amount). Basis of net revenue.}
       - {name: is_revenue, type: boolean, description: True when order_status is Delivered or Shipped. Only these lines count as revenue.}
@@ -48,10 +48,10 @@ tables:
       - gold.dim_customer.customer_sk = gold.fact_sales.customer_sk
     columns:
       - {name: customer_sk, type: bigint, description: Surrogate key of this customer version. -1 is the unknown customer.}
-      - {name: customer_id, type: string, description: Business id of the customer, like C00042. Same for all versions; count customers with COUNT(DISTINCT customer_id).}
-      - {name: full_name, type: string, pii: true, description: First and last name. PII, hidden from the copilot.}
-      - {name: email, type: string, pii: true, description: Latest email address (Type 1, same on every version). PII, hidden from the copilot.}
-      - {name: phone, type: string, pii: true, description: Latest Indian mobile number with +91 prefix. PII, hidden from the copilot.}
+      - {name: customer_id, type: string, description: "Business id of the customer, like C00042. Same for all versions; count customers with COUNT(DISTINCT customer_id)."}
+      - {name: full_name, type: string, pii: true, description: "First and last name. PII, hidden from the copilot."}
+      - {name: email, type: string, pii: true, description: "Latest email address (Type 1, same on every version). PII, hidden from the copilot."}
+      - {name: phone, type: string, pii: true, description: "Latest Indian mobile number with +91 prefix. PII, hidden from the copilot."}
       - {name: city, type: string, description: "City the customer lived in during this version, such as Mumbai, Bengaluru, Chennai.", examples: [Mumbai, Chennai, Hyderabad]}
       - {name: state, type: string, description: Indian state of the city.}
       - {name: region, type: string, description: "Region of India. One of North, South, East, West, Central."}
@@ -70,7 +70,7 @@ tables:
       - gold.dim_product.product_sk = gold.fact_sales.product_sk
     columns:
       - {name: product_sk, type: bigint, description: Surrogate key of the product. -1 is the unknown product.}
-      - {name: product_id, type: string, description: Business id of the product, like P0042.}
+      - {name: product_id, type: string, description: "Business id of the product, like P0042."}
       - {name: product_name, type: string, description: Product name.}
       - {name: category, type: string, description: "Top level category. One of Electronics, Fashion, Home & Kitchen, Beauty, Grocery, Books, Sports.", examples: [Electronics, Fashion, Grocery]}
       - {name: sub_category, type: string, description: "Sub category, such as Smartphones, Sarees, Cookware, Sweets."}
@@ -87,15 +87,15 @@ tables:
     joins:
       - gold.dim_date.date_key = gold.fact_sales.date_key
     columns:
-      - {name: date_key, type: int, description: Date as yyyymmdd, like 20241101.}
+      - {name: date_key, type: int, description: "Date as yyyymmdd, like 20241101."}
       - {name: date, type: date, description: Calendar date.}
-      - {name: year, type: int, description: Calendar year, 2024 or 2025.}
+      - {name: year, type: int, description: "Calendar year, 2024 or 2025."}
       - {name: quarter, type: int, description: Calendar quarter 1 to 4.}
       - {name: month, type: int, description: Month number 1 to 12.}
-      - {name: month_name, type: string, description: Month name, like October.}
+      - {name: month_name, type: string, description: "Month name, like October."}
       - {name: year_month, type: string, description: "Year and month as yyyy-MM, like 2024-10. Good for monthly trends."}
       - {name: day_of_month, type: int, description: Day of the month 1 to 31.}
-      - {name: day_name, type: string, description: Weekday name, like Saturday.}
+      - {name: day_name, type: string, description: "Weekday name, like Saturday."}
       - {name: is_weekend, type: boolean, description: True on Saturday and Sunday.}
       - {name: is_festive_season, type: boolean, description: True during the Diwali festive season (21 days before Diwali to 2 days after).}
       - {name: is_diwali, type: boolean, description: True on Diwali day itself (2024-11-01 and 2025-10-20).}
@@ -113,7 +113,7 @@ tables:
       - {name: units_sold, type: bigint, description: Units sold on revenue orders.}
       - {name: net_revenue, type: "decimal(16,2)", description: Net revenue in INR.}
       - {name: gross_margin, type: "decimal(16,2)", description: Gross margin in INR.}
-      - {name: all_orders, type: bigint, description: All orders that day, any status.}
+      - {name: all_orders, type: bigint, description: "All orders that day, any status."}
       - {name: cancelled_orders, type: bigint, description: Orders with status Cancelled.}
       - {name: returned_orders, type: bigint, description: Orders with status Returned.}
       - {name: is_festive_season, type: boolean, description: True during the Diwali festive season.}
@@ -147,7 +147,7 @@ tables:
       - {name: city, type: string, description: Customer city on the order date.}
       - {name: state, type: string, description: Indian state.}
       - {name: region, type: string, description: Region of India.}
-      - {name: city_tier, type: int, description: City tier 1, 2 or 3.}
+      - {name: city_tier, type: int, description: "City tier 1, 2 or 3."}
       - {name: order_count, type: bigint, description: Revenue orders.}
       - {name: units_sold, type: bigint, description: Units sold.}
       - {name: net_revenue, type: "decimal(16,2)", description: Net revenue in INR.}

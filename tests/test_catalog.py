@@ -56,3 +56,22 @@ def test_chunks_are_unique_and_cover_everything() -> None:
 def test_markdown_render_lists_all_tables() -> None:
     md = render_markdown(catalog)
     assert all(f"`{t.name}`" in md for t in catalog.tables)
+
+
+def test_catalog_yaml_has_no_split_values() -> None:
+    """An unquoted comma in a YAML flow mapping silently cuts a description short."""
+    import yaml
+
+    from lakehouse_copilot.catalog.model import CATALOG_FILE
+
+    def nulls(node, path=""):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if value is None:
+                    yield f"{path}/{key}"
+                yield from nulls(value, f"{path}/{key}")
+        elif isinstance(node, list):
+            for i, item in enumerate(node):
+                yield from nulls(item, f"{path}[{i}]")
+
+    assert list(nulls(yaml.safe_load(CATALOG_FILE.read_text(encoding="utf-8")))) == []

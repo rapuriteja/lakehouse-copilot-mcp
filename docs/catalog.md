@@ -15,7 +15,7 @@ Sales fact table. One row per order line (one product inside one order). Use it 
 | Column | Type | Description |
 |---|---|---|
 | `order_item_id` | string | Unique id of the order line. Primary key. |
-| `order_id` | string | Order id. One order can have several lines |
+| `order_id` | string | Order id. One order can have several lines, so count orders with COUNT(DISTINCT order_id). |
 | `date_key` | int | Order date as yyyymmdd. Joins to gold.dim_date.date_key. |
 | `order_ts` | timestamp | Exact time the order was placed (UTC). |
 | `customer_sk` | bigint | Surrogate key of the customer version valid on the order date. Joins to gold.dim_customer.customer_sk. |
@@ -26,7 +26,7 @@ Sales fact table. One row per order line (one product inside one order). Use it 
 | `quantity` | int | Number of units of the product on this line. Always greater than zero. |
 | `unit_price` | decimal(12,2) | List price of one unit in INR at the time of the order. |
 | `discount_pct` | decimal(5,2) | Discount on this line in percent (0 to 100). Festive season discounts are higher. |
-| `gross_amount` | decimal(14,2) | quantity * unit_price in INR |
+| `gross_amount` | decimal(14,2) | quantity * unit_price in INR, before discount. |
 | `discount_amount` | decimal(14,2) | Discount given on this line in INR. |
 | `net_amount` | decimal(14,2) | Amount the customer paid for the line in INR (gross_amount - discount_amount). Basis of net revenue. |
 | `is_revenue` | boolean | True when order_status is Delivered or Shipped. Only these lines count as revenue. |
@@ -44,10 +44,10 @@ Customer dimension with full history (SCD Type 2). A customer who moved city or 
 | Column | Type | Description |
 |---|---|---|
 | `customer_sk` | bigint | Surrogate key of this customer version. -1 is the unknown customer. |
-| `customer_id` | string | Business id of the customer |
-| `full_name` | string | First and last name. |
-| `email` | string | Latest email address (Type 1 |
-| `phone` | string | Latest Indian mobile number with +91 prefix. |
+| `customer_id` | string | Business id of the customer, like C00042. Same for all versions; count customers with COUNT(DISTINCT customer_id). |
+| `full_name` | string | First and last name. PII, hidden from the copilot. |
+| `email` | string | Latest email address (Type 1, same on every version). PII, hidden from the copilot. |
+| `phone` | string | Latest Indian mobile number with +91 prefix. PII, hidden from the copilot. |
 | `city` | string | City the customer lived in during this version, such as Mumbai, Bengaluru, Chennai. |
 | `state` | string | Indian state of the city. |
 | `region` | string | Region of India. One of North, South, East, West, Central. |
@@ -69,7 +69,7 @@ Product dimension. One row per product with category, brand and prices in INR.
 | Column | Type | Description |
 |---|---|---|
 | `product_sk` | bigint | Surrogate key of the product. -1 is the unknown product. |
-| `product_id` | string | Business id of the product |
+| `product_id` | string | Business id of the product, like P0042. |
 | `product_name` | string | Product name. |
 | `category` | string | Top level category. One of Electronics, Fashion, Home & Kitchen, Beauty, Grocery, Books, Sports. |
 | `sub_category` | string | Sub category, such as Smartphones, Sarees, Cookware, Sweets. |
@@ -87,15 +87,15 @@ Calendar dimension. One row per day for 2024 and 2025, with year, quarter, month
 
 | Column | Type | Description |
 |---|---|---|
-| `date_key` | int | Date as yyyymmdd |
+| `date_key` | int | Date as yyyymmdd, like 20241101. |
 | `date` | date | Calendar date. |
-| `year` | int | Calendar year |
+| `year` | int | Calendar year, 2024 or 2025. |
 | `quarter` | int | Calendar quarter 1 to 4. |
 | `month` | int | Month number 1 to 12. |
-| `month_name` | string | Month name |
+| `month_name` | string | Month name, like October. |
 | `year_month` | string | Year and month as yyyy-MM, like 2024-10. Good for monthly trends. |
 | `day_of_month` | int | Day of the month 1 to 31. |
-| `day_name` | string | Weekday name |
+| `day_name` | string | Weekday name, like Saturday. |
 | `is_weekend` | boolean | True on Saturday and Sunday. |
 | `is_festive_season` | boolean | True during the Diwali festive season (21 days before Diwali to 2 days after). |
 | `is_diwali` | boolean | True on Diwali day itself (2024-11-01 and 2025-10-20). |
@@ -115,7 +115,7 @@ Daily sales summary, pre-aggregated from gold.fact_sales. Fast for daily and fes
 | `units_sold` | bigint | Units sold on revenue orders. |
 | `net_revenue` | decimal(16,2) | Net revenue in INR. |
 | `gross_margin` | decimal(16,2) | Gross margin in INR. |
-| `all_orders` | bigint | All orders that day |
+| `all_orders` | bigint | All orders that day, any status. |
 | `cancelled_orders` | bigint | Orders with status Cancelled. |
 | `returned_orders` | bigint | Orders with status Returned. |
 | `is_festive_season` | boolean | True during the Diwali festive season. |
@@ -153,7 +153,7 @@ Monthly sales by customer city, using the city the customer lived in on the orde
 | `city` | string | Customer city on the order date. |
 | `state` | string | Indian state. |
 | `region` | string | Region of India. |
-| `city_tier` | int | City tier 1 |
+| `city_tier` | int | City tier 1, 2 or 3. |
 | `order_count` | bigint | Revenue orders. |
 | `units_sold` | bigint | Units sold. |
 | `net_revenue` | decimal(16,2) | Net revenue in INR. |
@@ -172,6 +172,9 @@ Monthly sales by customer city, using the city the customer lived in on the orde
 | Gross margin % | Gross margin as a percentage of net revenue. | `100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END)` |
 | Discount given | Total discount in INR on revenue orders. | `SUM(CASE WHEN f.is_revenue THEN f.discount_amount END)` |
 | Average discount % | Discount amount as a percentage of gross amount, on revenue orders. | `100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END) / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)` |
+| All orders | Number of distinct orders with any status, including cancelled and returned. | `COUNT(DISTINCT f.order_id)` |
+| Cancelled orders | Number of distinct orders with status Cancelled. | `COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END)` |
+| Returned orders | Number of distinct orders with status Returned. | `COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END)` |
 | Cancellation rate | Percentage of all orders (any status) that were cancelled. | `100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id)` |
 | Return rate | Percentage of all orders (any status) that were returned. | `100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id)` |
 | Active customers | Number of distinct customers with at least one revenue order. Count customer_id, not customer_sk, because one customer can have several SCD2 versions. | `COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END)` |
