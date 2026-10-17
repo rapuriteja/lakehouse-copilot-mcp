@@ -1,4 +1,5 @@
-"""Azure retriever: hybrid search in Azure AI Search with Azure OpenAI embeddings.
+"""Azure retriever: hybrid search in Azure AI Search, with embeddings from OpenRouter
+(default), Azure OpenAI or a local model (see rag/embeddings.py).
 
 Hybrid search runs two searches and merges them with Reciprocal Rank Fusion (RRF):
   - keyword search (BM25) on the text, good for exact names like `net_amount`
@@ -15,30 +16,10 @@ from typing import Any
 
 from lakehouse_copilot.catalog.docs import Chunk
 from lakehouse_copilot.rag.base import SearchHit
+from lakehouse_copilot.rag.embeddings import Embedder, get_embedder
 
 VECTOR_FIELD = "content_vector"
 SEMANTIC_CONFIG = "catalog-semantic"
-
-
-class AzureOpenAIEmbedder:
-    def __init__(self, client: Any, deployment: str) -> None:
-        self.client = client  # openai.AzureOpenAI
-        self.deployment = deployment
-
-    @classmethod
-    def from_settings(cls, settings) -> AzureOpenAIEmbedder:
-        from openai import AzureOpenAI
-
-        client = AzureOpenAI(
-            azure_endpoint=settings.azure_openai_endpoint,
-            api_key=settings.azure_openai_api_key.get_secret_value(),
-            api_version=settings.azure_openai_api_version,
-        )
-        return cls(client, settings.azure_openai_embedding_deployment)
-
-    def embed(self, texts: list[str]) -> list[list[float]]:
-        response = self.client.embeddings.create(model=self.deployment, input=texts)
-        return [item.embedding for item in response.data]
 
 
 def build_index_definition(index_name: str, dimensions: int):
@@ -100,7 +81,7 @@ def build_index_definition(index_name: str, dimensions: int):
 class AzureSearchIndexer:
     """Create the index (if needed) and upload all chunks with their embeddings."""
 
-    def __init__(self, index_client: Any, search_client: Any, embedder: AzureOpenAIEmbedder):
+    def __init__(self, index_client: Any, search_client: Any, embedder: Embedder):
         self.index_client = index_client
         self.search_client = search_client
         self.embedder = embedder
@@ -111,12 +92,12 @@ class AzureSearchIndexer:
         from azure.search.documents import SearchClient
         from azure.search.documents.indexes import SearchIndexClient
 
-        credential = AzureKeyCredential(settings.azure_search_api_key.get_secret_value())
+        credential = AzureKeyCredential(_search_key(settings))
         endpoint = settings.azure_search_endpoint
         return cls(
             SearchIndexClient(endpoint, credential),
             SearchClient(endpoint, settings.azure_search_index, credential),
-            AzureOpenAIEmbedder.from_settings(settings),
+            get_embedder(settings),
         )
 
     def index(self, chunks: list[Chunk], index_name: str, dimensions: int) -> int:
@@ -130,7 +111,7 @@ class AzureSearchIndexer:
 class AzureSearchRetriever:
     name = "azure-hybrid"
 
-    def __init__(self, search_client: Any, embedder: AzureOpenAIEmbedder, semantic: bool = True):
+    def __init__(self, search_client: Any, embedder: Embedder, semantic: bool = True):
         self.search_client = search_client
         self.embedder = embedder
         self.semantic = semantic
@@ -143,9 +124,9 @@ class AzureSearchRetriever:
         client = SearchClient(
             settings.azure_search_endpoint,
             settings.azure_search_index,
-            AzureKeyCredential(settings.azure_search_api_key.get_secret_value()),
+            AzureKeyCredential(_search_key(settings)),
         )
-        return cls(client, AzureOpenAIEmbedder.from_settings(settings))
+        return cls(client, get_embedder(settings))
 
     def search(self, query: str, k: int = 5) -> list[SearchHit]:
         from azure.search.documents.models import VectorizedQuery
@@ -174,3 +155,10 @@ class AzureSearchRetriever:
             )
             hits.append(SearchHit(chunk, float(score)))
         return hits
+
+
+def _search_key(settings) -> str:
+    key = settings.secret("azure_search_api_key")
+    if not key:
+        raise RuntimeError("RETRIEVER=azure needs AZURE_SEARCH_API_KEY (or KEY_VAULT_URI).")
+    return key
