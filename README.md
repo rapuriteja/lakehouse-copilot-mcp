@@ -246,10 +246,24 @@ left unfixed so the test score stays honest. Unseen wording is exactly what LLM 
 
 ### LLM mode (OpenRouter)
 
-LLM-mode accuracy has **not been measured yet**. The benchmark (`lhc bench`) compares cheap
-OpenRouter models that support tool calling on the same 40 questions, with accuracy, cost per run
-and latency; its results will be added here once it has run. Until then, LLM mode is covered by
-tests with scripted fake models only.
+`lhc bench` ran three cheap OpenRouter models that support tool calling through the same agent,
+tools and retriever (hybrid: TF-IDF + OpenRouter embeddings) on the same 40 questions. Full
+table and analysis in [`evals/README.md`](evals/README.md#llm-mode-and-model-choice-openrouter).
+
+| Model | Test (held out) | All 40 | Cost per run | Median latency |
+|---|---|---|---|---|
+| offline planner (no LLM) | 16/20 (80%) | 36/40 (90%) | free | 0.39 s |
+| `openai/gpt-4o-mini` | 9/20 (45%) | 22/40 (55%) | $0.025 | 5.6 s |
+| **`google/gemini-2.5-flash` (chosen)** | **17/20 (85%)** | 34/40 (85%) | $0.044 | 3.1 s |
+| `deepseek/deepseek-chat` | 15/20 (75%) | 32/40 (80%) | $0.049 | 7.6 s |
+
+`lhc eval` with the chosen model then scored **17/20 (85%) on held-out questions** (offline
+planner: 80%) and 35/40 overall, for $0.045 for the whole 40-question run (about $0.001 per
+question). LLM mode answered all four questions the offline planner got wrong. Its own misses
+were mostly counting cancelled orders as orders and guessing a filter value. Scores move a little
+between runs, since LLM output is not fully repeatable.
+
+Hybrid retrieval with OpenRouter embeddings raised held-out MRR@5 from 0.91 to 0.96.
 
 ## Sample questions and answers
 
@@ -309,7 +323,7 @@ Sources: tables gold.dim_customer, gold.fact_sales; docs metric:active_customers
 | AI | Model Context Protocol (Python SDK v2), OpenRouter through the OpenAI SDK (tool calling, embeddings), Azure AI Search (hybrid + semantic ranker), scikit-learn TF-IDF, sqlglot |
 | App | Streamlit, command-line tool `lhc` (argparse) |
 | Infrastructure | Terraform (azurerm 4.x): ADLS Gen2, Databricks, Key Vault, AI Search, Log Analytics, Application Insights (Azure OpenAI optional, off by default) |
-| CI/CD and quality | GitHub Actions (OIDC deploy), pytest (137 tests), ruff, pydantic-settings |
+| CI/CD and quality | GitHub Actions (OIDC deploy), pytest (138 tests), ruff, pydantic-settings |
 
 ## Run it locally (free, no cloud account)
 
@@ -328,7 +342,7 @@ lhc index                     # catalog docs + search index
 lhc ask "Top 5 cities by revenue during the festive season" -v
 lhc ui                        # chat UI at http://localhost:8501
 lhc eval                      # golden-set evaluation -> evals/results/
-pytest                        # 137 tests, no cloud keys needed
+pytest                        # 138 tests, no cloud keys needed
 ```
 
 The whole flow (generate, pipeline, index, eval) takes about 50 seconds on a laptop.
@@ -352,7 +366,7 @@ DeepSeek and more). The copilot uses it through the official OpenAI Python SDK. 
 
 ```bash
 OPENROUTER_API_KEY=<your key>
-LLM_MODEL=openai/gpt-4o-mini      # any OpenRouter model id that supports tool calling
+LLM_MODEL=google/gemini-2.5-flash  # any OpenRouter model id that supports tool calling
 ```
 
 Without a key the copilot runs in offline mode, so tests and CI never need one. Other options:
@@ -361,7 +375,7 @@ Without a key the copilot runs in offline mode, so tests and CI never need one. 
 
 ```bash
 lhc ask "Top 3 brands in Fashion by revenue" -v     # shows SQL, LLM calls, tokens and cost
-lhc eval --model openai/gpt-4o-mini                  # LLM-mode accuracy on the golden set
+lhc eval --model google/gemini-2.5-flash              # LLM-mode accuracy on the golden set
 lhc bench --models openai/gpt-4o-mini,google/gemini-2.5-flash,deepseek/deepseek-chat
 ```
 
@@ -423,12 +437,13 @@ src/lakehouse_copilot/
 scripts/         scan_secrets.py (run before every push)
 infra/terraform/ Azure infrastructure
 resources/       Databricks Asset Bundle resources (schemas, volume, job)
-tests/           137 tests (pipeline, SCD2, DQ, guard, MCP, agent, UI, evals, secrets)
+tests/           138 tests (pipeline, SCD2, DQ, guard, MCP, agent, UI, evals, secrets)
 ```
 
 ## Limitations and next steps
 
-- LLM-mode accuracy is not measured yet. `lhc bench` measures it with one command.
+- LLM mode (Gemini 2.5 Flash) is only 5 points above the offline planner on 20 held-out
+  questions; a bigger golden set is needed to tell close models apart with confidence.
 - The Azure paths (AI Search, Key Vault, Databricks SQL) are covered by tests with fakes and
   `terraform validate`; they have not been deployed from this repository yet.
 - The offline planner handles common metric, filter and group-by questions, not nested logic.

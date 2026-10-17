@@ -172,6 +172,9 @@ answers from facts instead of memory.
 - **Query rewriting** adds the official names of synonyms ("AOV" → "average order value") and
   merges follow-ups ("and in 2025?" uses the previous question). On the held-out test set it raised
   hit@5 from 0.95 to 1.00.
+- **Local hybrid** (`RETRIEVER=hybrid`): TF-IDF plus vector search with embeddings from OpenRouter
+  (`openai/text-embedding-3-small`), merged with Reciprocal Rank Fusion. Measured on the held-out
+  set: MRR@5 went from 0.91 (TF-IDF only) to 0.96, hit@1 from 0.85 to 0.95.
 
 ### Interview questions
 1. **Why hybrid instead of only vectors?** Column names and codes (COD, UPI, `date_key`) are exact
@@ -263,6 +266,26 @@ Steps for each question: rewrite → retrieve → answer → cite.
 **Why 80% and not 100%?** The four failures are new wording the rules had not seen. I left them
 unfixed so the test number stays an honest estimate of how it does on new questions, and wrote
 the failure analysis in `evals/README.md`.
+
+### LLM mode results and model choice (OpenRouter)
+- `lhc bench` runs several models through the same agent on the same 40 questions and records
+  accuracy, the cost OpenRouter reports, and latency. I compared GPT-4o-mini, Gemini 2.5 Flash
+  and DeepSeek Chat. **Gemini 2.5 Flash won: 85% on held-out questions** (offline planner 80%),
+  $0.044 for all 40 questions, 3.1 s median per question.
+- The **first** benchmark was worse than the offline planner for every model. The dev failures
+  showed why: the model guessed table names, and it joined two pre-aggregated tables, which double
+  counts. Putting the table list with columns into the system prompt, and a rule to start from
+  `fact_sales`, fixed most of it. I only looked at dev failures to make the fix.
+- LLM scores move a little between runs even at temperature 0, so I report the run I measured and
+  say so.
+
+### Interview questions
+1. **How did you choose the LLM?** On my own golden set, not on public leaderboards: held-out
+   execution accuracy first, then cost, then latency. Gemini 2.5 Flash had the best test accuracy
+   (85%) at about $0.001 per question. GPT-4o-mini was cheaper per call but only 45% here.
+2. **Your LLM was worse than rules at first. What did you do?** I read the failures on the dev
+   split. They were agent bugs, not model limits: missing schema in the prompt, and joins across
+   aggregate tables. I fixed the prompt, re-ran dev, then ran the held-out test once.
 
 ---
 
