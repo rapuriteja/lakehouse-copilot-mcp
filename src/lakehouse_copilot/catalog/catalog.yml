@@ -1,0 +1,281 @@
+# Data catalog for the Gold layer: the single source of truth for documentation.
+# It feeds the RAG index, the MCP describe_table tool, the semantic layer used by the
+# offline planner, and the Unity Catalog table/column comments.
+#
+# All money columns are in Indian Rupees (INR). Dates are in UTC.
+
+tables:
+  - name: gold.fact_sales
+    description: >
+      Sales fact table. One row per order line (one product inside one order).
+      Use it for revenue, units, discounts, margin, order counts and payment method analysis.
+      Cancelled and returned lines are kept; filter with is_revenue = true for revenue.
+    grain: one row per order_item_id
+    primary_key: order_item_id
+    joins:
+      - gold.fact_sales.date_key = gold.dim_date.date_key
+      - gold.fact_sales.customer_sk = gold.dim_customer.customer_sk
+      - gold.fact_sales.product_sk = gold.dim_product.product_sk
+    columns:
+      - {name: order_item_id, type: string, description: Unique id of the order line. Primary key.}
+      - {name: order_id, type: string, description: Order id. One order can have several lines, so count orders with COUNT(DISTINCT order_id).}
+      - {name: date_key, type: int, description: Order date as yyyymmdd. Joins to gold.dim_date.date_key.}
+      - {name: order_ts, type: timestamp, description: Exact time the order was placed (UTC).}
+      - {name: customer_sk, type: bigint, description: Surrogate key of the customer version valid on the order date. Joins to gold.dim_customer.customer_sk.}
+      - {name: product_sk, type: bigint, description: Surrogate key of the product. Joins to gold.dim_product.product_sk.}
+      - {name: payment_method, type: string, description: "How the customer paid. One of UPI, COD, Credit Card, Debit Card, Wallet, Net Banking.", examples: [UPI, COD, Credit Card]}
+      - {name: order_status, type: string, description: "Status of the order. One of Delivered, Shipped, Cancelled, Returned.", examples: [Delivered, Cancelled]}
+      - {name: channel, type: string, description: "Where the order was placed. App or Web.", examples: [App, Web]}
+      - {name: quantity, type: int, description: Number of units of the product on this line. Always greater than zero.}
+      - {name: unit_price, type: "decimal(12,2)", description: List price of one unit in INR at the time of the order.}
+      - {name: discount_pct, type: "decimal(5,2)", description: Discount on this line in percent (0 to 100). Festive season discounts are higher.}
+      - {name: gross_amount, type: "decimal(14,2)", description: quantity * unit_price in INR, before discount.}
+      - {name: discount_amount, type: "decimal(14,2)", description: Discount given on this line in INR.}
+      - {name: net_amount, type: "decimal(14,2)", description: Amount the customer paid for the line in INR (gross_amount - discount_amount). Basis of net revenue.}
+      - {name: is_revenue, type: boolean, description: True when order_status is Delivered or Shipped. Only these lines count as revenue.}
+      - {name: cost_amount, type: "decimal(14,2)", description: quantity * cost_price in INR. What the product cost us.}
+      - {name: margin_amount, type: "decimal(14,2)", description: net_amount - cost_amount in INR. Gross margin (profit) of the line.}
+
+  - name: gold.dim_customer
+    description: >
+      Customer dimension with full history (SCD Type 2). A customer who moved city or was
+      upgraded to Premium has one row per version. Use is_current = true for the latest
+      details. Join from gold.fact_sales on customer_sk to get the city and segment the
+      customer had on the order date.
+    grain: one row per customer version
+    primary_key: customer_sk
+    joins:
+      - gold.dim_customer.customer_sk = gold.fact_sales.customer_sk
+    columns:
+      - {name: customer_sk, type: bigint, description: Surrogate key of this customer version. -1 is the unknown customer.}
+      - {name: customer_id, type: string, description: Business id of the customer, like C00042. Same for all versions; count customers with COUNT(DISTINCT customer_id).}
+      - {name: full_name, type: string, description: First and last name.}
+      - {name: email, type: string, description: Latest email address (Type 1, same on every version).}
+      - {name: phone, type: string, description: Latest Indian mobile number with +91 prefix.}
+      - {name: city, type: string, description: "City the customer lived in during this version, such as Mumbai, Bengaluru, Chennai.", examples: [Mumbai, Chennai, Hyderabad]}
+      - {name: state, type: string, description: Indian state of the city.}
+      - {name: region, type: string, description: "Region of India. One of North, South, East, West, Central."}
+      - {name: city_tier, type: int, description: "City tier. 1 = metro (Mumbai, Delhi, Bengaluru...), 2 = large city, 3 = smaller city."}
+      - {name: segment, type: string, description: "Customer segment. Premium or Regular."}
+      - {name: signup_date, type: date, description: Date the customer created an account.}
+      - {name: effective_from, type: date, description: First day this version is valid (inclusive).}
+      - {name: effective_to, type: date, description: First day this version is no longer valid (exclusive). 9999-12-31 for the current version.}
+      - {name: is_current, type: boolean, description: True for the latest version of the customer.}
+
+  - name: gold.dim_product
+    description: Product dimension. One row per product with category, brand and prices in INR.
+    grain: one row per product
+    primary_key: product_sk
+    joins:
+      - gold.dim_product.product_sk = gold.fact_sales.product_sk
+    columns:
+      - {name: product_sk, type: bigint, description: Surrogate key of the product. -1 is the unknown product.}
+      - {name: product_id, type: string, description: Business id of the product, like P0042.}
+      - {name: product_name, type: string, description: Product name.}
+      - {name: category, type: string, description: "Top level category. One of Electronics, Fashion, Home & Kitchen, Beauty, Grocery, Books, Sports.", examples: [Electronics, Fashion, Grocery]}
+      - {name: sub_category, type: string, description: "Sub category, such as Smartphones, Sarees, Cookware, Sweets."}
+      - {name: brand, type: string, description: "Brand, such as Samsung, boAt, FabIndia, Prestige, Haldiram's. 'Unknown' when the source had no brand."}
+      - {name: unit_price, type: "decimal(12,2)", description: Current list price of one unit in INR.}
+      - {name: cost_price, type: "decimal(12,2)", description: Our cost of one unit in INR.}
+
+  - name: gold.dim_date
+    description: >
+      Calendar dimension. One row per day for 2024 and 2025, with year, quarter, month,
+      weekday and the Diwali festive season flags.
+    grain: one row per calendar day
+    primary_key: date_key
+    joins:
+      - gold.dim_date.date_key = gold.fact_sales.date_key
+    columns:
+      - {name: date_key, type: int, description: Date as yyyymmdd, like 20241101.}
+      - {name: date, type: date, description: Calendar date.}
+      - {name: year, type: int, description: Calendar year, 2024 or 2025.}
+      - {name: quarter, type: int, description: Calendar quarter 1 to 4.}
+      - {name: month, type: int, description: Month number 1 to 12.}
+      - {name: month_name, type: string, description: Month name, like October.}
+      - {name: year_month, type: string, description: "Year and month as yyyy-MM, like 2024-10. Good for monthly trends."}
+      - {name: day_of_month, type: int, description: Day of the month 1 to 31.}
+      - {name: day_name, type: string, description: Weekday name, like Saturday.}
+      - {name: is_weekend, type: boolean, description: True on Saturday and Sunday.}
+      - {name: is_festive_season, type: boolean, description: True during the Diwali festive season (21 days before Diwali to 2 days after).}
+      - {name: is_diwali, type: boolean, description: True on Diwali day itself (2024-11-01 and 2025-10-20).}
+
+  - name: gold.agg_daily_sales
+    description: >
+      Daily sales summary, pre-aggregated from gold.fact_sales. Fast for daily and
+      festive-season trends. Revenue columns already exclude cancelled and returned orders.
+    grain: one row per day with at least one order
+    primary_key: date_key
+    columns:
+      - {name: date_key, type: int, description: Day as yyyymmdd.}
+      - {name: date, type: date, description: Calendar date.}
+      - {name: order_count, type: bigint, description: Revenue orders (Delivered or Shipped) that day.}
+      - {name: units_sold, type: bigint, description: Units sold on revenue orders.}
+      - {name: net_revenue, type: "decimal(16,2)", description: Net revenue in INR.}
+      - {name: gross_margin, type: "decimal(16,2)", description: Gross margin in INR.}
+      - {name: all_orders, type: bigint, description: All orders that day, any status.}
+      - {name: cancelled_orders, type: bigint, description: Orders with status Cancelled.}
+      - {name: returned_orders, type: bigint, description: Orders with status Returned.}
+      - {name: is_festive_season, type: boolean, description: True during the Diwali festive season.}
+
+  - name: gold.agg_monthly_category_sales
+    description: >
+      Monthly sales by product category. An order with products from two categories
+      is counted once in each category's order_count.
+    grain: one row per year_month and category
+    primary_key: [year_month, category]
+    columns:
+      - {name: year, type: int, description: Calendar year.}
+      - {name: month, type: int, description: Month number 1 to 12.}
+      - {name: year_month, type: string, description: Month as yyyy-MM.}
+      - {name: category, type: string, description: Product category.}
+      - {name: order_count, type: bigint, description: Revenue orders containing this category.}
+      - {name: units_sold, type: bigint, description: Units sold.}
+      - {name: net_revenue, type: "decimal(16,2)", description: Net revenue in INR.}
+      - {name: gross_margin, type: "decimal(16,2)", description: Gross margin in INR.}
+
+  - name: gold.agg_monthly_city_sales
+    description: >
+      Monthly sales by customer city, using the city the customer lived in on the order
+      date (point-in-time, from the SCD2 customer dimension).
+    grain: one row per year_month and city
+    primary_key: [year_month, city]
+    columns:
+      - {name: year, type: int, description: Calendar year.}
+      - {name: month, type: int, description: Month number 1 to 12.}
+      - {name: year_month, type: string, description: Month as yyyy-MM.}
+      - {name: city, type: string, description: Customer city on the order date.}
+      - {name: state, type: string, description: Indian state.}
+      - {name: region, type: string, description: Region of India.}
+      - {name: city_tier, type: int, description: City tier 1, 2 or 3.}
+      - {name: order_count, type: bigint, description: Revenue orders.}
+      - {name: units_sold, type: bigint, description: Units sold.}
+      - {name: net_revenue, type: "decimal(16,2)", description: Net revenue in INR.}
+      - {name: gross_margin, type: "decimal(16,2)", description: Gross margin in INR.}
+
+# Business metrics: the official definitions. `sql` is written against gold.fact_sales
+# aliased as f (and dim tables d, c, p when joined).
+metrics:
+  - name: net_revenue
+    label: Net revenue
+    description: Money customers paid after discounts, for orders that were Delivered or Shipped. Cancelled and returned orders are excluded. In INR.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+    synonyms: [revenue, sales, total sales, income, turnover, earnings, sales value]
+  - name: gross_merchandise_value
+    label: Gross merchandise value (GMV)
+    description: Value of revenue orders at list price, before discounts. In INR.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)
+    synonyms: [gmv, gross sales, list price value]
+  - name: order_count
+    label: Orders
+    description: Number of distinct revenue orders (Delivered or Shipped).
+    sql: COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+    synonyms: [orders, number of orders, order volume, how many orders, purchases]
+  - name: units_sold
+    label: Units sold
+    description: Total quantity sold on revenue orders.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.quantity END)
+    synonyms: [units, quantity, items sold, volume, pieces]
+  - name: average_order_value
+    label: Average order value (AOV)
+    description: Net revenue divided by the number of revenue orders. In INR.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+    synonyms: [aov, average basket, basket size, average order size, average spend per order]
+  - name: gross_margin
+    label: Gross margin
+    description: Net revenue minus product cost, for revenue orders. In INR.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.margin_amount END)
+    synonyms: [margin, profit, gross profit]
+  - name: gross_margin_pct
+    label: Gross margin %
+    description: Gross margin as a percentage of net revenue.
+    sql: 100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+    synonyms: [margin percent, margin rate, profitability, profit margin]
+  - name: discount_amount
+    label: Discount given
+    description: Total discount in INR on revenue orders.
+    sql: SUM(CASE WHEN f.is_revenue THEN f.discount_amount END)
+    synonyms: [discounts, total discount, markdown]
+  - name: average_discount_pct
+    label: Average discount %
+    description: Discount amount as a percentage of gross amount, on revenue orders.
+    sql: 100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END) / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)
+    synonyms: [discount rate, average discount, discount percent]
+  - name: cancellation_rate
+    label: Cancellation rate
+    description: Percentage of all orders (any status) that were cancelled.
+    sql: 100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id)
+    synonyms: [cancel rate, cancellations, cancelled orders percent]
+  - name: return_rate
+    label: Return rate
+    description: Percentage of all orders (any status) that were returned.
+    sql: 100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id)
+    synonyms: [returns, returned orders percent, rto rate]
+  - name: active_customers
+    label: Active customers
+    description: Number of distinct customers with at least one revenue order. Count customer_id, not customer_sk, because one customer can have several SCD2 versions.
+    sql: COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END)
+    requires: [gold.dim_customer]
+    synonyms: [customers, buyers, unique customers, number of customers, shoppers]
+
+glossary:
+  - term: UPI
+    definition: Unified Payments Interface, India's real-time bank-to-bank mobile payment system (Google Pay, PhonePe, Paytm). The most common payment method in this data.
+    synonyms: [google pay, phonepe, upi payments]
+  - term: COD
+    definition: Cash on Delivery. The customer pays cash when the parcel arrives. Popular in tier 2 and tier 3 cities and has a higher cancellation rate.
+    synonyms: [cash on delivery, cash payment]
+  - term: Festive season
+    definition: The Diwali shopping season, from 21 days before Diwali until 2 days after. Flagged by gold.dim_date.is_festive_season. Orders and discounts rise sharply.
+    synonyms: [diwali sale, festival season, festive sale, big festive sale]
+  - term: Diwali
+    definition: Festival of lights and the biggest shopping event of the year in India. Diwali was on 2024-11-01 and 2025-10-20 (gold.dim_date.is_diwali).
+    synonyms: [deepavali, festival of lights]
+  - term: City tier
+    definition: Indian city classification. Tier 1 are metros (Mumbai, Delhi, Bengaluru, Chennai, Hyderabad, Kolkata, Pune, Ahmedabad), tier 2 are large cities, tier 3 are smaller cities. Column city_tier.
+    synonyms: [metro, tier 1, tier 2, tier 3, small towns]
+  - term: Customer segment
+    definition: Premium or Regular, stored in gold.dim_customer.segment. Customers can be upgraded to Premium; the upgrade creates a new SCD2 version.
+    synonyms: [premium customers, regular customers, segment]
+  - term: Revenue order
+    definition: An order with status Delivered or Shipped (is_revenue = true). Cancelled and Returned orders are not revenue.
+    synonyms: [valid order, completed order, successful order]
+  - term: Region
+    definition: Part of India the customer lives in. One of North, South, East, West, Central.
+    synonyms: [zone, south india, north india]
+  - term: Order line
+    definition: One product inside an order. gold.fact_sales has one row per order line, so an order with 3 products has 3 rows.
+    synonyms: [line item, order item, basket item]
+
+business_rules:
+  - name: revenue_recognition
+    title: Which orders count as revenue
+    text: >
+      Revenue counts only Delivered and Shipped orders (gold.fact_sales.is_revenue = true).
+      Cancelled and Returned orders are excluded from net revenue, orders, units, AOV and
+      margin, but they are included in cancellation rate and return rate.
+  - name: customer_city_history
+    title: Customer city at order time versus current city
+    text: >
+      gold.dim_customer keeps history (SCD Type 2). Joining gold.fact_sales to
+      gold.dim_customer on customer_sk gives the city and segment the customer had on the
+      order date. To report on where customers live today, filter dim_customer with
+      is_current = true. Count customers with COUNT(DISTINCT customer_id).
+  - name: festive_season_definition
+    title: Diwali festive season dates
+    text: >
+      Festive season 2024 runs from 2024-10-11 to 2024-11-03 (Diwali 2024-11-01).
+      Festive season 2025 runs from 2025-09-29 to 2025-10-22 (Diwali 2025-10-20).
+      Use gold.dim_date.is_festive_season to filter it.
+  - name: currency_and_time
+    title: Currency, time zone and data range
+    text: >
+      All amounts are in Indian Rupees (INR). Timestamps are UTC. The data covers orders
+      from 2024-01-01 to 2025-12-31.
+  - name: data_quality
+    title: Data quality and quarantined records
+    text: >
+      Bad source records never reach Gold. Silver removes duplicates and moves rows that fail
+      data quality rules (missing or unknown customer, invalid payment method, zero or
+      negative quantity, unknown product, line of a rejected order) to quarantine tables.
+      Warnings such as malformed emails or a missing brand are counted but the row is kept.
