@@ -1,0 +1,405 @@
+# Golden question set for the evaluation harness.
+#
+# split: dev  = questions used while building the offline planner and the retriever
+#        test = held-out questions, written before running them, never used for tuning
+# relevant_docs: catalog chunk ids that answer the question (a hit = any of them retrieved)
+# gold_sql: hand-written SQL whose result is the correct answer
+# order_matters: compare rows in order (only for "top N" and time trends)
+
+questions:
+  # ------------------------------------------------------------------ dev
+  - id: d01
+    split: dev
+    question: What was the total net revenue in 2024?
+    relevant_docs: [metric:net_revenue, rule:revenue_recognition]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2024
+
+  - id: d02
+    split: dev
+    question: How many orders did we get in 2025?
+    relevant_docs: [metric:order_count]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025
+
+  - id: d03
+    split: dev
+    question: Top 5 cities by net revenue in 2025
+    relevant_docs: [metric:net_revenue, rule:customer_city_history, table:gold.agg_monthly_city_sales]
+    order_matters: true
+    gold_sql: |
+      SELECT c.city, SUM(CASE WHEN f.is_revenue THEN f.net_amount END) AS revenue
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2025 GROUP BY 1 ORDER BY 2 DESC LIMIT 5
+
+  - id: d04
+    split: dev
+    question: Which payment method has the most orders?
+    relevant_docs: [metric:order_count, columns:gold.fact_sales:2]
+    gold_sql: |
+      SELECT payment_method, COUNT(DISTINCT CASE WHEN is_revenue THEN order_id END)
+      FROM gold.fact_sales GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+
+  - id: d05
+    split: dev
+    question: What is the average order value for UPI vs COD?
+    relevant_docs: [metric:average_order_value]
+    gold_sql: |
+      SELECT payment_method,
+             SUM(CASE WHEN is_revenue THEN net_amount END)
+             / COUNT(DISTINCT CASE WHEN is_revenue THEN order_id END)
+      FROM gold.fact_sales WHERE payment_method IN ('UPI', 'COD') GROUP BY 1
+
+  - id: d06
+    split: dev
+    question: Monthly net revenue trend in 2025
+    relevant_docs: [metric:net_revenue, columns:gold.dim_date:2]
+    order_matters: true
+    gold_sql: |
+      SELECT d.year_month, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025 GROUP BY 1 ORDER BY 1
+
+  - id: d07
+    split: dev
+    question: Net revenue by category during the Diwali festive season 2024
+    relevant_docs: [rule:festive_season_definition, glossary:festive_season]
+    gold_sql: |
+      SELECT p.category, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE d.year = 2024 AND d.is_festive_season GROUP BY 1
+
+  - id: d08
+    split: dev
+    question: Which category has the highest gross margin percentage?
+    relevant_docs: [metric:gross_margin_pct]
+    gold_sql: |
+      SELECT p.category,
+             100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END)
+             / SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+
+  - id: d09
+    split: dev
+    question: What is the cancellation rate by payment method?
+    relevant_docs: [metric:cancellation_rate]
+    gold_sql: |
+      SELECT payment_method,
+             100.0 * COUNT(DISTINCT CASE WHEN order_status = 'Cancelled' THEN order_id END)
+             / COUNT(DISTINCT order_id)
+      FROM gold.fact_sales GROUP BY 1
+
+  - id: d10
+    split: dev
+    question: How many customers placed an order in Chennai?
+    relevant_docs: [metric:active_customers, rule:customer_city_history]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END)
+      FROM gold.fact_sales f JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE c.city = 'Chennai'
+
+  - id: d11
+    split: dev
+    question: Net revenue 2024 vs 2025
+    relevant_docs: [metric:net_revenue]
+    gold_sql: |
+      SELECT d.year, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key GROUP BY 1
+
+  - id: d12
+    split: dev
+    question: How many orders were cancelled in October 2025?
+    relevant_docs: [metric:cancelled_orders]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025 AND d.month = 10
+
+  - id: d13
+    split: dev
+    question: Units sold by category for tier 3 cities
+    relevant_docs: [metric:units_sold, glossary:city_tier]
+    gold_sql: |
+      SELECT p.category, SUM(CASE WHEN f.is_revenue THEN f.quantity END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE c.city_tier = 3 GROUP BY 1
+
+  - id: d14
+    split: dev
+    question: Which day of the week has the most orders?
+    relevant_docs: [metric:order_count, columns:gold.dim_date:2]
+    gold_sql: |
+      SELECT d.day_name, COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+
+  - id: d15
+    split: dev
+    question: Top 3 brands in Fashion by net revenue
+    relevant_docs: [metric:net_revenue, columns:gold.dim_product:1]
+    order_matters: true
+    gold_sql: |
+      SELECT p.brand, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE p.category = 'Fashion' GROUP BY 1 ORDER BY 2 DESC LIMIT 3
+
+  - id: d16
+    split: dev
+    question: What is the return rate in 2025?
+    relevant_docs: [metric:return_rate]
+    gold_sql: |
+      SELECT 100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END)
+             / COUNT(DISTINCT f.order_id)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025
+
+  - id: d17
+    split: dev
+    question: Net revenue by channel
+    relevant_docs: [metric:net_revenue, columns:gold.fact_sales:2]
+    gold_sql: |
+      SELECT channel, SUM(CASE WHEN is_revenue THEN net_amount END)
+      FROM gold.fact_sales GROUP BY 1
+
+  - id: d18
+    split: dev
+    question: Gross margin from Premium customers in 2025
+    relevant_docs: [metric:gross_margin, glossary:customer_segment]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.margin_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2025 AND c.segment = 'Premium'
+
+  - id: d19
+    split: dev
+    question: Average discount percentage during the festive season
+    relevant_docs: [metric:average_discount_pct, glossary:festive_season, rule:festive_season_definition]
+    gold_sql: |
+      SELECT 100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END)
+             / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.is_festive_season
+
+  - id: d20
+    split: dev
+    question: Net revenue in the South region in 2024
+    relevant_docs: [metric:net_revenue, glossary:region]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2024 AND c.region = 'South'
+
+  # ------------------------------------------------------------------ test (held out)
+  - id: t01
+    split: test
+    question: How much money did we make in 2025 after discounts?
+    relevant_docs: [metric:net_revenue]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025
+
+  - id: t02
+    split: test
+    question: Give me the number of orders placed through the website in 2024.
+    relevant_docs: [metric:order_count, columns:gold.fact_sales:2]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2024 AND f.channel = 'Web'
+
+  - id: t03
+    split: test
+    question: Which state brought in the most sales?
+    relevant_docs: [metric:net_revenue, columns:gold.dim_customer:2]
+    gold_sql: |
+      SELECT c.state, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+
+  - id: t04
+    split: test
+    question: What was the GMV during Diwali season 2025?
+    relevant_docs: [metric:gross_merchandise_value, rule:festive_season_definition, glossary:festive_season]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025 AND d.is_festive_season
+
+  - id: t05
+    split: test
+    question: Show the average basket size for each customer segment.
+    relevant_docs: [metric:average_order_value, glossary:customer_segment]
+    gold_sql: |
+      SELECT c.segment,
+             SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+             / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      GROUP BY 1
+
+  - id: t06
+    split: test
+    question: What share of COD orders got cancelled?
+    relevant_docs: [metric:cancellation_rate, glossary:cod]
+    gold_sql: |
+      SELECT 100.0 * COUNT(DISTINCT CASE WHEN order_status = 'Cancelled' THEN order_id END)
+             / COUNT(DISTINCT order_id)
+      FROM gold.fact_sales WHERE payment_method = 'COD'
+
+  - id: t07
+    split: test
+    question: List the five best-selling products by units in 2025.
+    relevant_docs: [metric:units_sold, columns:gold.dim_product:1]
+    gold_sql: |
+      SELECT p.product_name, SUM(CASE WHEN f.is_revenue THEN f.quantity END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE d.year = 2025 GROUP BY 1 ORDER BY 2 DESC LIMIT 5
+
+  - id: t08
+    split: test
+    question: How many unique buyers did we have in 2024?
+    relevant_docs: [metric:active_customers]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2024
+
+  - id: t09
+    split: test
+    question: Quarterly net revenue for 2025.
+    relevant_docs: [metric:net_revenue, columns:gold.dim_date:1]
+    order_matters: true
+    gold_sql: |
+      SELECT d.quarter, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2025 GROUP BY 1 ORDER BY 1
+
+  - id: t10
+    split: test
+    question: Which region has the lowest average order value?
+    relevant_docs: [metric:average_order_value, glossary:region]
+    gold_sql: |
+      SELECT c.region,
+             SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+             / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      GROUP BY 1 ORDER BY 2 ASC LIMIT 1
+
+  - id: t11
+    split: test
+    question: Total discount given on Electronics in 2024.
+    relevant_docs: [metric:discount_amount]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.discount_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE d.year = 2024 AND p.category = 'Electronics'
+
+  - id: t12
+    split: test
+    question: Compare revenue from tier 1 and tier 2 cities.
+    relevant_docs: [metric:net_revenue, glossary:city_tier]
+    gold_sql: |
+      SELECT c.city_tier, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE c.city_tier IN (1, 2) GROUP BY 1
+
+  - id: t13
+    split: test
+    question: What was our gross profit from Bengaluru customers in 2025?
+    relevant_docs: [metric:gross_margin]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.margin_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2025 AND c.city = 'Bengaluru'
+
+  - id: t14
+    split: test
+    question: How many orders were returned in 2024?
+    relevant_docs: [metric:returned_orders]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2024
+
+  - id: t15
+    split: test
+    question: What was the revenue on Diwali day in 2024?
+    relevant_docs: [glossary:diwali, metric:net_revenue]
+    gold_sql: |
+      SELECT SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2024 AND d.is_diwali
+
+  - id: t16
+    split: test
+    question: Revenue split by payment mode for Grocery.
+    relevant_docs: [metric:net_revenue, columns:gold.fact_sales:2]
+    gold_sql: |
+      SELECT f.payment_method, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE p.category = 'Grocery' GROUP BY 1
+
+  - id: t17
+    split: test
+    question: Which month of 2024 had the highest number of orders?
+    relevant_docs: [metric:order_count, columns:gold.dim_date:2]
+    gold_sql: |
+      SELECT d.year_month, COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f JOIN gold.dim_date d ON f.date_key = d.date_key
+      WHERE d.year = 2024 GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+
+  - id: t18
+    split: test
+    question: What is the margin rate for the Books category?
+    relevant_docs: [metric:gross_margin_pct]
+    gold_sql: |
+      SELECT 100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END)
+             / SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE p.category = 'Books'
+
+  - id: t19
+    split: test
+    question: How many orders did Premium customers place on weekends in 2025?
+    relevant_docs: [metric:order_count, glossary:customer_segment]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE d.year = 2025 AND d.is_weekend AND c.segment = 'Premium'
+
+  - id: t20
+    split: test
+    question: Net revenue from Hyderabad by sub category in 2025.
+    relevant_docs: [metric:net_revenue, columns:gold.dim_product:1]
+    gold_sql: |
+      SELECT p.sub_category, SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
+      FROM gold.fact_sales f
+      JOIN gold.dim_date d ON f.date_key = d.date_key
+      JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk
+      JOIN gold.dim_product p ON f.product_sk = p.product_sk
+      WHERE d.year = 2025 AND c.city = 'Hyderabad' GROUP BY 1
