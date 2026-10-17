@@ -25,6 +25,7 @@ derby.log
 *.tfstate.*
 *.tfplan
 .terraform.lock.hcl.bak
+terraform.tfvars
 
 # Databricks bundle
 .databricks/

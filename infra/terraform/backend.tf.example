@@ -1,0 +1,11 @@
+# Remote state in Azure Storage. Create the storage account once (by hand or a bootstrap
+# script), then rename this file to backend.tf and run `terraform init -migrate-state`.
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate"
+    storage_account_name = "sttfstate<unique>"
+    container_name       = "tfstate"
+    key                  = "lakehouse-copilot.tfstate"
+    use_azuread_auth     = true
+  }
+}

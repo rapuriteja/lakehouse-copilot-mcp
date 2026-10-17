@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and adjust. Nothing here is secret.
+project         = "lhcopilot"
+environment     = "dev"
+location        = "centralindia"
+openai_location = "eastus"
+search_sku      = "free"
