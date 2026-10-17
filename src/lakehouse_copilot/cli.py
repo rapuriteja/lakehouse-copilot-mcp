@@ -24,13 +24,20 @@ def _cmd_pipeline(args: argparse.Namespace) -> None:
     from lakehouse_copilot.pipeline.run import run_pipeline
 
     settings = get_settings()
-    summary = run_pipeline(args.raw or settings.data_dir, args.lakehouse or settings.lakehouse_dir)
+    lakehouse_dir = args.lakehouse or settings.lakehouse_dir
+    summary = run_pipeline(args.raw or settings.data_dir, lakehouse_dir)
     print(json.dumps(summary["row_counts"], indent=2))
     failed = [r for r in summary["dq_results"] if r["failed_rows"]]
     print("DQ findings:")
     for r in failed:
         print(f"  {r['table']:<12} {r['rule']:<26} {r['action']:<10} {r['failed_rows']}")
     print(f"Finished in {summary['duration_seconds']}s")
+
+    from lakehouse_copilot.catalog import load_catalog
+    from lakehouse_copilot.sql.engine import build_serving_db
+
+    db = build_serving_db(lakehouse_dir, settings.duckdb_path, load_catalog())
+    print(f"Serving layer for the copilot: {db}")
 
 
 def _cmd_index(args: argparse.Namespace) -> None:
@@ -64,6 +71,25 @@ def _cmd_search(args: argparse.Namespace) -> None:
         print(f"{hit.score:.3f}  {hit.chunk.id:<45} {hit.chunk.title}")
 
 
+def _cmd_sql(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.tools import LakehouseTools, ToolError
+
+    try:
+        result = LakehouseTools.from_settings().run_sql(args.query)
+    except ToolError as e:
+        raise SystemExit(str(e)) from e
+    print(result["sql"])
+    print(" | ".join(result["columns"]))
+    for row in result["rows"]:
+        print(" | ".join(str(v) for v in row))
+
+
+def _cmd_mcp(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.mcp_server.server import main as serve
+
+    serve(http=args.http, host=args.host, port=args.port)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lhc", description="Lakehouse Copilot command line")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -85,6 +111,16 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("query")
     search.add_argument("-k", type=int, default=5)
     search.set_defaults(func=_cmd_search)
+
+    sql = sub.add_parser("sql", help="run a read-only SQL query on Gold")
+    sql.add_argument("query")
+    sql.set_defaults(func=_cmd_sql)
+
+    mcp = sub.add_parser("mcp", help="start the MCP server")
+    mcp.add_argument("--http", action="store_true", help="serve streamable HTTP instead of stdio")
+    mcp.add_argument("--host", default="127.0.0.1")
+    mcp.add_argument("--port", type=int, default=8000)
+    mcp.set_defaults(func=_cmd_mcp)
     return parser
 
 
