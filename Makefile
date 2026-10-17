@@ -1,4 +1,4 @@
-.PHONY: install lint test generate
+.PHONY: install lint test generate pipeline
 
 install:
 	pip install -e ".[dev]"
@@ -12,3 +12,6 @@ test:
 
 generate:
 	lhc generate
+
+pipeline:
+	lhc pipeline
