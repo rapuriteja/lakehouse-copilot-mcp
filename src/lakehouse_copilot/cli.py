@@ -110,6 +110,16 @@ def _cmd_ui(args: argparse.Namespace) -> None:
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(app)], check=False)
 
 
+def _cmd_eval(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.agent.copilot import build_copilot
+    from lakehouse_copilot.evals.run import run_evaluation, save_report
+
+    report = run_evaluation(build_copilot(), split=args.split)
+    json_path, md_path = save_report(report, args.out)
+    print(md_path.read_text(encoding="utf-8").split("## Per question")[0])
+    print(f"Saved {json_path} and {md_path}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lhc", description="Lakehouse Copilot command line")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -149,6 +159,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     ui = sub.add_parser("ui", help="start the Streamlit chat UI")
     ui.set_defaults(func=_cmd_ui)
+
+    ev = sub.add_parser("eval", help="evaluate retrieval and text-to-SQL accuracy")
+    ev.add_argument("--split", choices=["all", "dev", "test"], default="all")
+    ev.add_argument("--out", default="evals/results", help="folder for the reports")
+    ev.set_defaults(func=_cmd_eval)
     return parser
 
 
