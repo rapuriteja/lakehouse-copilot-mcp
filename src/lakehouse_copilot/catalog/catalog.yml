@@ -201,16 +201,31 @@ metrics:
     description: Discount amount as a percentage of gross amount, on revenue orders.
     sql: 100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END) / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END)
     synonyms: [discount rate, average discount, discount percent]
+  - name: all_orders
+    label: All orders
+    description: Number of distinct orders with any status, including cancelled and returned.
+    sql: COUNT(DISTINCT f.order_id)
+    synonyms: [total orders including cancelled, orders of any status, all orders placed]
+  - name: cancelled_orders
+    label: Cancelled orders
+    description: Number of distinct orders with status Cancelled.
+    sql: COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END)
+    synonyms: [orders cancelled, orders were cancelled, cancellations, number of cancellations]
+  - name: returned_orders
+    label: Returned orders
+    description: Number of distinct orders with status Returned.
+    sql: COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END)
+    synonyms: [orders returned, orders were returned, number of returns]
   - name: cancellation_rate
     label: Cancellation rate
     description: Percentage of all orders (any status) that were cancelled.
     sql: 100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id)
-    synonyms: [cancel rate, cancellations, cancelled orders percent]
+    synonyms: [cancel rate, cancelled orders percent, share of orders cancelled, percentage of orders cancelled]
   - name: return_rate
     label: Return rate
     description: Percentage of all orders (any status) that were returned.
     sql: 100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id)
-    synonyms: [returns, returned orders percent, rto rate]
+    synonyms: [returned orders percent, share of orders returned, percentage of orders returned]
   - name: active_customers
     label: Active customers
     description: Number of distinct customers with at least one revenue order. Count customer_id, not customer_sk, because one customer can have several SCD2 versions.
