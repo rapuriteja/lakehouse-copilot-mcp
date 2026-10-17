@@ -24,6 +24,17 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
 
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, so old commits are scanned too
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/scan_secrets.py
+
   test:
     runs-on: ubuntu-latest
     strategy:
