@@ -31,9 +31,9 @@ data engineering.
 | Interface | Local | Azure |
 |---|---|---|
 | `Lakehouse.write()` | Parquet | Delta table in Unity Catalog |
-| `Retriever.search()` | TF-IDF | Azure AI Search |
+| `Retriever.search()` | TF-IDF, or TF-IDF + embeddings (`hybrid`) | Azure AI Search |
 | `engine.execute()` | DuckDB | Databricks SQL |
-| `ChatModel.chat()` | none (offline planner) | Azure OpenAI |
+| `ChatModel.chat()` | OpenRouter, or offline planner without a key | OpenRouter (key from Key Vault) |
 
 The choice is made in `config.py` from `.env`. Tests never need cloud keys.
 
@@ -219,7 +219,11 @@ Errors are returned to the model as tool errors with the reason, so it can corre
 
 Steps for each question: rewrite → retrieve → answer → cite.
 
-- **LLM mode** (`copilot.py`, `llm.py`): a **tool-calling loop**. The model gets the question,
+- **LLM mode** (`copilot.py`, `llm.py`): the model is reached through **OpenRouter**, one API in
+  front of many models. It speaks the OpenAI chat API, so the official OpenAI SDK works with
+  `base_url=https://openrouter.ai/api/v1`, and changing model is just a different `LLM_MODEL`
+  string. Each answer records its LLM calls, tokens and the cost OpenRouter reports.
+  The loop is a **tool-calling loop**. The model gets the question,
   the docs and the tool list; it calls tools; results (or errors) go back as `tool` messages;
   this repeats until it answers or hits `max_steps` (so it can never loop forever).
 - **Offline mode** (`semantic.py`): a small **semantic layer**. It finds metrics by name and
@@ -236,6 +240,10 @@ Steps for each question: rewrite → retrieve → answer → cite.
    the SQL result against a gold query.
 2. **Why keep an offline planner when LLMs exist?** It is free, instant and deterministic, it is a
    baseline to measure the LLM against, and it handles the most common questions without any cost.
+3. **Why OpenRouter instead of one provider's API?** One key and one API for many models, so I
+   can benchmark cheap models on my golden set and switch by changing a string. The trade-off is
+   one more company in the data path, so for sensitive data a direct provider or a private Azure
+   OpenAI deployment can still be switched on (`LLM_PROVIDER=azure`).
 
 ---
 
@@ -277,8 +285,11 @@ the failure analysis in `evals/README.md`.
 1. **How do you promote from dev to prod?** Same bundle and Terraform code, different target and
    variables; deploy is a manual workflow, and the prod GitHub environment can require a reviewer
    before it runs.
-2. **Where do secrets live?** Key Vault in Azure and `.env` (git-ignored) locally; CI uses OIDC,
-   so there is no long-lived secret to leak.
+2. **Where do secrets live?** Key Vault in Azure and `.env` (git-ignored) locally. Databricks
+   jobs read Key Vault through a **Key Vault-backed secret scope** (`{{secrets/scope/key}}` in the
+   cluster's environment variables, redacted in logs), and the app reads it with `az login`. CI
+   uses OIDC, so there is no long-lived Azure secret to leak, and `scripts/scan_secrets.py`
+   checks the code and the full git history for keys before every push.
 
 ---
 

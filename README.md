@@ -85,9 +85,9 @@ flowchart LR
 | Compute | Local PySpark 4 | Databricks job (Asset Bundle), DBR 17.3 |
 | Query engine for the copilot | DuckDB (read-only, PII columns left out) | Databricks SQL warehouse |
 | Catalog search | TF-IDF (scikit-learn) | Azure AI Search: hybrid BM25 + vector + semantic ranker |
-| Embeddings | none needed | Azure OpenAI `text-embedding-3-small` |
-| Copilot brain | Offline semantic planner (rules, no LLM) | Azure OpenAI tool calling (`gpt-4o-mini`) |
-| Secrets | `.env` (git-ignored) | Key Vault |
+| Embeddings | none, or OpenRouter / sentence-transformers for `RETRIEVER=hybrid` | OpenRouter `openai/text-embedding-3-small` |
+| Copilot brain | OpenRouter tool calling, or the offline semantic planner (rules, no LLM) when no key is set | OpenRouter tool calling (key read from Key Vault) |
+| Secrets | `.env` (git-ignored) | Key Vault (OpenRouter and AI Search keys) |
 | Monitoring | JSON run reports | Log Analytics + Application Insights |
 
 ## What is inside
@@ -153,9 +153,13 @@ From it the project generates:
 - 52 search chunks (one per table, column group, metric, term and rule) for RAG;
 - on Databricks, Unity Catalog **table and column comments** and **`pii` tags**.
 
-Search runs locally with TF-IDF, or on **Azure AI Search** with hybrid retrieval (keyword BM25 and
-vector search merged with Reciprocal Rank Fusion) plus the semantic ranker, using Azure OpenAI
-embeddings.
+Search runs in one of three ways:
+
+- `RETRIEVER=local`: TF-IDF keyword search, free and offline (the default);
+- `RETRIEVER=hybrid`: TF-IDF plus vector search on embeddings, merged with Reciprocal Rank Fusion,
+  on your laptop (embeddings from OpenRouter, or a free local sentence-transformers model);
+- `RETRIEVER=azure`: **Azure AI Search** hybrid retrieval (BM25 + vectors with RRF) plus the
+  semantic ranker, with embeddings from OpenRouter.
 
 ### 4. MCP server
 
@@ -195,7 +199,8 @@ For every question the copilot:
    value; follow-ups like *"and in 2025?"* are merged with the previous question);
 2. **retrieves** the relevant catalog docs;
 3. **answers**, in one of two modes:
-   - **LLM mode** (Azure OpenAI or any OpenAI-compatible endpoint): the model calls the tools in a
+   - **LLM mode** (OpenRouter by default; Azure OpenAI or any OpenAI-compatible server also
+     work): the model calls the tools in a
      loop. SQL errors go back to it so it can correct itself, with a step limit.
    - **Offline mode** (default, free): a rule-based **semantic layer** maps the question to
      metrics, dimensions and filters and writes the SQL. It reads real dimension values (city
@@ -237,9 +242,14 @@ The 4 held-out failures are analysed in [`evals/README.md`](evals/README.md). Al
 wording the rule-based planner had not seen: "after discounts" matched the discount metric,
 "share of COD orders that got cancelled" is not a known phrase for cancellation rate, "five"
 written as a word was not read as a number, and "Diwali day" was read as "group by day". They were
-left unfixed so the test score stays honest. Unseen wording is exactly what LLM mode is for. LLM mode was tested with scripted fake models in the test suite;
-its accuracy has **not** been measured yet, because that needs Azure OpenAI keys. Run
-`LLM_PROVIDER=azure lhc eval` to measure it.
+left unfixed so the test score stays honest. Unseen wording is exactly what LLM mode is for.
+
+### LLM mode (OpenRouter)
+
+LLM-mode accuracy has **not been measured yet**. The benchmark (`lhc bench`) compares cheap
+OpenRouter models that support tool calling on the same 40 questions, with accuracy, cost per run
+and latency; its results will be added here once it has run. Until then, LLM mode is covered by
+tests with scripted fake models only.
 
 ## Sample questions and answers
 
@@ -296,10 +306,10 @@ Sources: tables gold.dim_customer, gold.fact_sales; docs metric:active_customers
 | Area | Tools |
 |---|---|
 | Data engineering | PySpark 4, Delta Lake, Unity Catalog, Databricks Asset Bundles, DuckDB, Parquet |
-| AI | Model Context Protocol (Python SDK v2), Azure OpenAI (tool calling, embeddings), Azure AI Search (hybrid + semantic ranker), scikit-learn TF-IDF, sqlglot |
+| AI | Model Context Protocol (Python SDK v2), OpenRouter through the OpenAI SDK (tool calling, embeddings), Azure AI Search (hybrid + semantic ranker), scikit-learn TF-IDF, sqlglot |
 | App | Streamlit, command-line tool `lhc` (argparse) |
-| Infrastructure | Terraform (azurerm 4.x): ADLS Gen2, Databricks, Key Vault, AI Search, Azure OpenAI, Log Analytics, Application Insights |
-| CI/CD and quality | GitHub Actions (OIDC deploy), pytest (120 tests), ruff, pydantic-settings |
+| Infrastructure | Terraform (azurerm 4.x): ADLS Gen2, Databricks, Key Vault, AI Search, Log Analytics, Application Insights (Azure OpenAI optional, off by default) |
+| CI/CD and quality | GitHub Actions (OIDC deploy), pytest (137 tests), ruff, pydantic-settings |
 
 ## Run it locally (free, no cloud account)
 
@@ -318,7 +328,7 @@ lhc index                     # catalog docs + search index
 lhc ask "Top 5 cities by revenue during the festive season" -v
 lhc ui                        # chat UI at http://localhost:8501
 lhc eval                      # golden-set evaluation -> evals/results/
-pytest                        # 120 tests, no cloud keys needed
+pytest                        # 137 tests, no cloud keys needed
 ```
 
 The whole flow (generate, pipeline, index, eval) takes about 50 seconds on a laptop.
@@ -334,73 +344,66 @@ Add it to your client with [`examples/mcp_client_config.json`](examples/mcp_clie
 (set the two absolute paths). Then ask the client, for example, *"Using the lakehouse tools,
 which category had the best gross margin in 2025?"*
 
-### Use a real LLM
+### Use a real LLM (OpenRouter)
 
-In `.env` set `LLM_PROVIDER=azure` with `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY` and
-`AZURE_OPENAI_CHAT_DEPLOYMENT`, or `LLM_PROVIDER=openai` with any OpenAI-compatible
-`OPENAI_BASE_URL`, `OPENAI_API_KEY` and `OPENAI_MODEL` (for example a local Ollama server).
+[OpenRouter](https://openrouter.ai) is one API in front of many models (OpenAI, Google,
+DeepSeek and more). The copilot uses it through the official OpenAI Python SDK. Put your key in
+`.env` (git-ignored) and nothing else needs to change:
+
+```bash
+OPENROUTER_API_KEY=<your key>
+LLM_MODEL=openai/gpt-4o-mini      # any OpenRouter model id that supports tool calling
+```
+
+Without a key the copilot runs in offline mode, so tests and CI never need one. Other options:
+`LLM_BASE_URL` points at any OpenAI-compatible server (for example a local Ollama), and
+`LLM_PROVIDER=azure` uses Azure OpenAI instead.
+
+```bash
+lhc ask "Top 3 brands in Fashion by revenue" -v     # shows SQL, LLM calls, tokens and cost
+lhc eval --model openai/gpt-4o-mini                  # LLM-mode accuracy on the golden set
+lhc bench --models openai/gpt-4o-mini,google/gemini-2.5-flash,deepseek/deepseek-chat
+```
+
+### Check for secrets before pushing
+
+```bash
+python scripts/scan_secrets.py   # working tree + full git history; also runs in CI
+```
 
 ## Deploy to Azure
 
-> Deploying creates paid resources (Databricks compute, Azure OpenAI usage). AI Search uses the
-> free tier. Delete the resource group when you are done.
+> Deploying creates paid resources (Databricks compute). AI Search uses the free tier and the
+> LLM is paid per use on OpenRouter. Run `terraform destroy` when you are done.
 
-**1. Infrastructure (Terraform)**
+**[AZURE_SETUP.md](AZURE_SETUP.md) is a step-by-step guide** (az login, Terraform, Unity Catalog,
+the Key Vault-backed secret scope, the bundle deploy, testing, costs and clean-up). In short:
 
-```bash
-cd infra/terraform
-cp terraform.tfvars.example terraform.tfvars   # region, names; nothing secret
-az login
-terraform init
-terraform plan -out tfplan
-terraform apply tfplan
-terraform output env_file_hint                 # values for your .env
-```
+1. **Terraform** (`infra/terraform`) creates a resource group, ADLS Gen2 (`landing` and
+   `lakehouse` containers, shared keys disabled), a Databricks premium workspace with an access
+   connector, Key Vault (RBAC) holding the OpenRouter and AI Search keys, AI Search (free tier,
+   semantic ranker) and Log Analytics + Application Insights. The OpenRouter key is passed as
+   `TF_VAR_openrouter_api_key`, never written in a file. Azure OpenAI is optional
+   (`enable_azure_openai = true`) and off by default.
+2. **Unity Catalog**: a storage credential from the access connector, an external location and
+   the `lakehouse_copilot` catalog (one time).
+3. **Secret scope**: a Key Vault-backed Databricks secret scope named `lakehouse-copilot`, so jobs
+   read the keys from Key Vault.
+4. **Databricks Asset Bundle**: `databricks bundle deploy -t dev`, then run the job
+   `generate_data → bronze → silver → gold → publish_docs → index_search`. `publish_docs`
+   writes catalog descriptions as Unity Catalog comments and PII tags; `index_search` embeds the
+   catalog docs through OpenRouter and uploads them to Azure AI Search.
+5. **Point the copilot at Azure** with `terraform output env_file_hint`. The app reads missing keys
+   from Key Vault (`KEY_VAULT_URI`) with your `az login`.
 
-This creates a resource group, ADLS Gen2 (`landing` and `lakehouse` containers, shared keys
-disabled), a Databricks premium workspace with an access connector, Key Vault (RBAC) holding the
-Search and OpenAI keys, AI Search (free tier, semantic ranker), Azure OpenAI with chat and
-embedding deployments, and Log Analytics + Application Insights with diagnostic settings.
-
-**2. Unity Catalog (one time, in the Databricks workspace)**
-
-Create a storage credential from the access connector, an external location on the `lakehouse`
-container, and the catalog:
-
-```sql
-CREATE CATALOG IF NOT EXISTS lakehouse_copilot
-  MANAGED LOCATION 'abfss://lakehouse@<storage_account>.dfs.core.windows.net/';
-```
-
-**3. Pipeline job (Databricks Asset Bundle)**
-
-```bash
-export DATABRICKS_HOST=$(terraform -chdir=infra/terraform output -raw databricks_workspace_url)
-databricks bundle validate -t dev
-databricks bundle deploy -t dev
-databricks bundle run -t dev medallion_pipeline
-```
-
-The job runs `generate_data → bronze → silver → gold → publish_docs` on a single-node cluster.
-The last task writes catalog descriptions as Unity Catalog comments and tags PII columns.
-
-**4. Point the copilot at Azure** (in `.env`)
-
-```bash
-QUERY_ENGINE=databricks        # + DATABRICKS_HOST, DATABRICKS_HTTP_PATH, DATABRICKS_TOKEN
-RETRIEVER=azure                # + AZURE_SEARCH_ENDPOINT, AZURE_SEARCH_API_KEY
-LLM_PROVIDER=azure             # + AZURE_OPENAI_* values
-```
-
-Then `lhc index` creates the Azure AI Search index and uploads the embedded chunks.
-
-**CI/CD.** [`ci.yml`](.github/workflows/ci.yml) runs on every push: ruff, pytest on Python 3.10
-and 3.13, the full local pipeline with evals (the report is uploaded as an artifact), and
-`terraform validate`. [`deploy.yml`](.github/workflows/deploy.yml) is started by hand: it logs in
-to Azure with OIDC (no stored passwords), runs `terraform plan` (and `apply` if chosen), then
-deploys the bundle. It needs the repository secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
-`AZURE_SUBSCRIPTION_ID`, `TFSTATE_RESOURCE_GROUP`, `TFSTATE_STORAGE_ACCOUNT` and
-`DATABRICKS_CLIENT_ID`.
+**CI/CD.** [`ci.yml`](.github/workflows/ci.yml) runs on every push: ruff, the secret scan over the
+full history, pytest on Python 3.10 and 3.13, the full local pipeline with evals (the report is
+uploaded as an artifact), and `terraform validate`. No key is needed. [`deploy.yml`](.github/workflows/deploy.yml)
+is started by hand: it logs in to Azure with OIDC (no stored passwords), runs `terraform plan`
+(and `apply` if chosen), then deploys the bundle. It needs the repository secrets
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `TFSTATE_RESOURCE_GROUP`,
+`TFSTATE_STORAGE_ACCOUNT`, `DATABRICKS_CLIENT_ID` and `OPENROUTER_API_KEY`, and the variable
+`AZURE_DATABRICKS_SP_OBJECT_ID`.
 
 ## Project layout
 
@@ -409,7 +412,7 @@ src/lakehouse_copilot/
   data_gen/      synthetic data generator (seeded, with dirty records)
   pipeline/      bronze, silver (DQ, SCD2), gold (star schema), storage, run
   catalog/       catalog.yml (single source of truth), model, docs and chunks
-  rag/           TF-IDF and Azure AI Search retrievers, Azure OpenAI embeddings
+  rag/           TF-IDF, local hybrid and Azure AI Search retrievers, embeddings
   sql/           SQL guard (sqlglot) and query engines (DuckDB, Databricks)
   tools.py       the four tools shared by the MCP server and the agent
   mcp_server/    MCP server
@@ -417,16 +420,16 @@ src/lakehouse_copilot/
   app/           Streamlit chat UI
   evals/         golden set, metrics, runner
   databricks_job.py  entry point for the Databricks job tasks
+scripts/         scan_secrets.py (run before every push)
 infra/terraform/ Azure infrastructure
 resources/       Databricks Asset Bundle resources (schemas, volume, job)
-tests/           120 tests (pipeline, SCD2, DQ, guard, MCP, agent, UI, evals)
+tests/           137 tests (pipeline, SCD2, DQ, guard, MCP, agent, UI, evals, secrets)
 ```
 
 ## Limitations and next steps
 
-- LLM-mode accuracy is not measured yet (no Azure keys were used while building). The eval
-  harness supports it with one setting.
-- The Azure paths (AI Search, Azure OpenAI, Databricks SQL) are covered by tests with fakes and
+- LLM-mode accuracy is not measured yet. `lhc bench` measures it with one command.
+- The Azure paths (AI Search, Key Vault, Databricks SQL) are covered by tests with fakes and
   `terraform validate`; they have not been deployed from this repository yet.
 - The offline planner handles common metric, filter and group-by questions, not nested logic.
 - Next: incremental (streaming) ingestion with Auto Loader, DQ expectations in Lakeflow

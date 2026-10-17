@@ -26,5 +26,19 @@ Latest results (offline planner + local TF-IDF): [eval_offline.md](results/eval_
 | t15 | What was the revenue on Diwali day in 2024? | The word "day" was read as "group by day". |
 
 These are the limits of keyword rules: they match words, not meaning. This is the gap the
-LLM agent (`LLM_PROVIDER=azure`) is built to close. Run `lhc eval` with Azure OpenAI
-configured to measure it; the report is saved as `results/eval_llm_<deployment>.md`.
+LLM agent (OpenRouter) is built to close.
+
+## LLM mode and model choice (OpenRouter)
+
+```bash
+lhc bench --models openai/gpt-4o-mini,google/gemini-2.5-flash,deepseek/deepseek-chat
+lhc eval --model <chosen model>      # full report: results/eval_llm_<model>.md
+```
+
+`lhc bench` runs every model through the same agent, tools, retriever and 40 questions, and
+records for each one: execution accuracy per split, the cost OpenRouter reported for the whole
+run, the median latency per question and the number of questions that failed with an API error.
+It picks the best held-out (test) accuracy, then the lowest cost. The rewriting step and every
+tool-calling turn count toward cost and latency.
+
+**Status: not measured yet.** The comparison table goes here after the first real run.
