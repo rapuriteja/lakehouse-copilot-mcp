@@ -33,6 +33,37 @@ def _cmd_pipeline(args: argparse.Namespace) -> None:
     print(f"Finished in {summary['duration_seconds']}s")
 
 
+def _cmd_index(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from lakehouse_copilot.catalog import load_catalog
+    from lakehouse_copilot.catalog.docs import build_chunks, render_markdown
+
+    settings = get_settings()
+    catalog = load_catalog()
+    chunks = build_chunks(catalog)
+    Path("docs").mkdir(exist_ok=True)
+    Path("docs/catalog.md").write_text(render_markdown(catalog), encoding="utf-8")
+    out = Path(settings.lakehouse_dir) / "_index" / "chunks.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(json.dumps(c.to_dict()) for c in chunks) + "\n", encoding="utf-8")
+    print(f"Wrote docs/catalog.md and {len(chunks)} chunks to {out}")
+
+    if settings.retriever == "azure":
+        from lakehouse_copilot.rag.azure import AzureSearchIndexer
+
+        indexer = AzureSearchIndexer.from_settings(settings)
+        n = indexer.index(chunks, settings.azure_search_index, settings.embedding_dimensions)
+        print(f"Uploaded {n} chunks to Azure AI Search index '{settings.azure_search_index}'")
+
+
+def _cmd_search(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.rag import get_retriever
+
+    for hit in get_retriever().search(args.query, k=args.k):
+        print(f"{hit.score:.3f}  {hit.chunk.id:<45} {hit.chunk.title}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lhc", description="Lakehouse Copilot command line")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -46,6 +77,14 @@ def build_parser() -> argparse.ArgumentParser:
     pipe.add_argument("--raw", help="raw input folder (default: DATA_DIR)")
     pipe.add_argument("--lakehouse", help="output folder (default: LAKEHOUSE_DIR)")
     pipe.set_defaults(func=_cmd_pipeline)
+
+    idx = sub.add_parser("index", help="build catalog docs and the search index")
+    idx.set_defaults(func=_cmd_index)
+
+    search = sub.add_parser("search", help="search catalog docs")
+    search.add_argument("query")
+    search.add_argument("-k", type=int, default=5)
+    search.set_defaults(func=_cmd_search)
     return parser
 
 
