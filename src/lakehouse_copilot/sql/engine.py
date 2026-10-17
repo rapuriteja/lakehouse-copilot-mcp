@@ -120,8 +120,9 @@ class DatabricksEngine:
     def from_settings(cls, settings) -> DatabricksEngine:
         from databricks import sql as dbsql
 
+        host = (settings.databricks_host or "").removeprefix("https://").rstrip("/")
         connection = dbsql.connect(
-            server_hostname=settings.databricks_host,
+            server_hostname=host,  # the connector wants the bare host name
             http_path=settings.databricks_http_path,
             access_token=settings.databricks_token.get_secret_value(),
             catalog=settings.databricks_catalog,
