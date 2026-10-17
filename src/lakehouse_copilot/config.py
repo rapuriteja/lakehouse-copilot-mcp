@@ -13,7 +13,7 @@ from typing import Literal
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEFAULT_LLM_MODEL = "openai/gpt-4o-mini"
+DEFAULT_LLM_MODEL = "google/gemini-2.5-flash"  # chosen by lhc bench, see evals/README.md
 
 # Settings field -> secret name in Key Vault (created by Terraform)
 KEY_VAULT_SECRETS = {

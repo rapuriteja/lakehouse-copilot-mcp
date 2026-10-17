@@ -1,0 +1,1559 @@
+{
+  "mode": "offline",
+  "retriever": "local-hybrid(openai/text-embedding-3-small)",
+  "sql_engine": "duckdb",
+  "questions": 40,
+  "retrieval": {
+    "dev": {
+      "per_question": [
+        {
+          "id": "d01",
+          "query": "What was the total net revenue in 2024?",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d02",
+          "query": "How many orders did we get in 2025?",
+          "retrieved": [
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "metric:cancelled_orders",
+            "rule:currency_and_time"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d03",
+          "query": "Top 5 cities by net revenue in 2025",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d04",
+          "query": "Which payment method has the most orders?",
+          "retrieved": [
+            "glossary:upi",
+            "metric:order_count",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "glossary:cod"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d05",
+          "query": "What is the average order value for UPI vs COD?",
+          "retrieved": [
+            "metric:average_order_value",
+            "glossary:upi",
+            "columns:gold.fact_sales:2",
+            "glossary:cod",
+            "metric:gross_merchandise_value"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d06",
+          "query": "Monthly net revenue trend in 2025",
+          "retrieved": [
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d07",
+          "query": "Net revenue by category during the Diwali festive season 2024",
+          "retrieved": [
+            "rule:festive_season_definition",
+            "glossary:festive_season",
+            "glossary:diwali",
+            "columns:gold.agg_daily_sales:2",
+            "metric:net_revenue"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d08",
+          "query": "Which category has the highest gross margin percentage? (gross margin %)",
+          "retrieved": [
+            "metric:gross_margin_pct",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:average_discount_pct",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d09",
+          "query": "What is the cancellation rate by payment method?",
+          "retrieved": [
+            "metric:cancellation_rate",
+            "glossary:cod",
+            "rule:revenue_recognition",
+            "metric:return_rate",
+            "glossary:upi"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d10",
+          "query": "How many customers placed an order in Chennai? (active customers)",
+          "retrieved": [
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "columns:gold.dim_customer:1",
+            "metric:all_orders",
+            "metric:order_count"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d11",
+          "query": "Net revenue 2024 vs 2025",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:festive_season_definition",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d12",
+          "query": "How many orders were cancelled in October 2025? (cancelled orders)",
+          "retrieved": [
+            "metric:cancelled_orders",
+            "metric:cancellation_rate",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d13",
+          "query": "Units sold by category for tier 3 cities (city tier)",
+          "retrieved": [
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:units_sold",
+            "table:gold.agg_monthly_category_sales",
+            "columns:gold.agg_monthly_category_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d14",
+          "query": "Which day of the week has the most orders?",
+          "retrieved": [
+            "columns:gold.agg_daily_sales:2",
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d15",
+          "query": "Top 3 brands in Fashion by net revenue",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d16",
+          "query": "What is the return rate in 2025?",
+          "retrieved": [
+            "metric:return_rate",
+            "metric:cancellation_rate",
+            "rule:festive_season_definition",
+            "rule:revenue_recognition",
+            "metric:average_discount_pct"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d17",
+          "query": "Net revenue by channel",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d18",
+          "query": "Gross margin from Premium customers in 2025 (customer segment, active customers)",
+          "retrieved": [
+            "glossary:customer_segment",
+            "metric:gross_margin",
+            "metric:active_customers",
+            "metric:gross_margin_pct",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d19",
+          "query": "Average discount percentage during the festive season (average discount %)",
+          "retrieved": [
+            "metric:average_discount_pct",
+            "glossary:festive_season",
+            "metric:discount_amount",
+            "rule:festive_season_definition",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d20",
+          "query": "Net revenue in the South region in 2024",
+          "retrieved": [
+            "metric:net_revenue",
+            "glossary:region",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        }
+      ],
+      "raw": {
+        "hit@1": 0.85,
+        "hit@3": 1.0,
+        "hit@5": 1.0,
+        "mrr@5": 0.925
+      },
+      "rewritten": {
+        "hit@1": 0.85,
+        "hit@3": 1.0,
+        "hit@5": 1.0,
+        "mrr@5": 0.925
+      }
+    },
+    "test": {
+      "per_question": [
+        {
+          "id": "t01",
+          "query": "How much money did we make in 2025 after discounts? (discount given)",
+          "retrieved": [
+            "metric:discount_amount",
+            "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
+            "metric:net_revenue",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 0.25
+        },
+        {
+          "id": "t02",
+          "query": "Give me the number of orders placed through the website in 2024.",
+          "retrieved": [
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "metric:cancelled_orders",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t03",
+          "query": "Which state brought in the most sales? (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t04",
+          "query": "What was the GMV during Diwali season 2025? (gross merchandise value)",
+          "retrieved": [
+            "metric:gross_merchandise_value",
+            "rule:festive_season_definition",
+            "glossary:diwali",
+            "glossary:festive_season",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t05",
+          "query": "Show the average basket size for each customer segment. (average order value)",
+          "retrieved": [
+            "metric:average_order_value",
+            "metric:average_discount_pct",
+            "table:gold.agg_monthly_city_sales",
+            "glossary:customer_segment",
+            "metric:active_customers"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t06",
+          "query": "What share of COD orders got cancelled?",
+          "retrieved": [
+            "glossary:cod",
+            "metric:cancellation_rate",
+            "metric:cancelled_orders",
+            "metric:all_orders",
+            "rule:revenue_recognition"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t07",
+          "query": "List the five best-selling products by units in 2025. (units sold)",
+          "retrieved": [
+            "metric:units_sold",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_monthly_category_sales:1",
+            "columns:gold.agg_daily_sales:1",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t08",
+          "query": "How many unique buyers did we have in 2024? (active customers)",
+          "retrieved": [
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "glossary:customer_segment",
+            "columns:gold.dim_customer:1",
+            "columns:gold.fact_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t09",
+          "query": "Quarterly net revenue for 2025.",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t10",
+          "query": "Which region has the lowest average order value?",
+          "retrieved": [
+            "metric:average_order_value",
+            "metric:average_discount_pct",
+            "metric:gross_merchandise_value",
+            "metric:order_count",
+            "glossary:region"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t11",
+          "query": "Total discount given on Electronics in 2024.",
+          "retrieved": [
+            "metric:discount_amount",
+            "metric:average_discount_pct",
+            "columns:gold.fact_sales:3",
+            "rule:festive_season_definition",
+            "glossary:diwali"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t12",
+          "query": "Compare revenue from tier 1 and tier 2 cities. (net revenue, city tier)",
+          "retrieved": [
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t13",
+          "query": "What was our gross profit from Bengaluru customers in 2025? (gross margin, active customers)",
+          "retrieved": [
+            "metric:gross_margin",
+            "metric:active_customers",
+            "metric:gross_margin_pct",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_merchandise_value"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t14",
+          "query": "How many orders were returned in 2024? (returned orders)",
+          "retrieved": [
+            "metric:returned_orders",
+            "metric:return_rate",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "glossary:revenue_order"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t15",
+          "query": "What was the revenue on Diwali day in 2024? (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:festive_season_definition",
+            "glossary:diwali",
+            "columns:gold.dim_date:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t16",
+          "query": "Revenue split by payment mode for Grocery. (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t17",
+          "query": "Which month of 2024 had the highest number of orders?",
+          "retrieved": [
+            "metric:order_count",
+            "columns:gold.agg_monthly_city_sales:1",
+            "columns:gold.agg_monthly_category_sales:1",
+            "rule:festive_season_definition",
+            "metric:all_orders"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t18",
+          "query": "What is the margin rate for the Books category? (gross margin %, gross margin)",
+          "retrieved": [
+            "metric:gross_margin_pct",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:average_discount_pct",
+            "columns:gold.fact_sales:3"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t19",
+          "query": "How many orders did Premium customers place on weekends in 2025? (customer segment, active customers)",
+          "retrieved": [
+            "glossary:customer_segment",
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "columns:gold.dim_customer:2",
+            "table:gold.dim_customer"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t20",
+          "query": "Net revenue from Hyderabad by sub category in 2025.",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "rule:revenue_recognition",
+            "table:gold.agg_monthly_category_sales"
+          ],
+          "reciprocal_rank": 1.0
+        }
+      ],
+      "raw": {
+        "hit@1": 0.8,
+        "hit@3": 0.95,
+        "hit@5": 0.95,
+        "mrr@5": 0.858
+      },
+      "rewritten": {
+        "hit@1": 0.95,
+        "hit@3": 0.95,
+        "hit@5": 1.0,
+        "mrr@5": 0.963
+      }
+    },
+    "all": {
+      "per_question": [
+        {
+          "id": "d01",
+          "query": "What was the total net revenue in 2024?",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d02",
+          "query": "How many orders did we get in 2025?",
+          "retrieved": [
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "metric:cancelled_orders",
+            "rule:currency_and_time"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d03",
+          "query": "Top 5 cities by net revenue in 2025",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d04",
+          "query": "Which payment method has the most orders?",
+          "retrieved": [
+            "glossary:upi",
+            "metric:order_count",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "glossary:cod"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d05",
+          "query": "What is the average order value for UPI vs COD?",
+          "retrieved": [
+            "metric:average_order_value",
+            "glossary:upi",
+            "columns:gold.fact_sales:2",
+            "glossary:cod",
+            "metric:gross_merchandise_value"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d06",
+          "query": "Monthly net revenue trend in 2025",
+          "retrieved": [
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d07",
+          "query": "Net revenue by category during the Diwali festive season 2024",
+          "retrieved": [
+            "rule:festive_season_definition",
+            "glossary:festive_season",
+            "glossary:diwali",
+            "columns:gold.agg_daily_sales:2",
+            "metric:net_revenue"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d08",
+          "query": "Which category has the highest gross margin percentage? (gross margin %)",
+          "retrieved": [
+            "metric:gross_margin_pct",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:average_discount_pct",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d09",
+          "query": "What is the cancellation rate by payment method?",
+          "retrieved": [
+            "metric:cancellation_rate",
+            "glossary:cod",
+            "rule:revenue_recognition",
+            "metric:return_rate",
+            "glossary:upi"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d10",
+          "query": "How many customers placed an order in Chennai? (active customers)",
+          "retrieved": [
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "columns:gold.dim_customer:1",
+            "metric:all_orders",
+            "metric:order_count"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d11",
+          "query": "Net revenue 2024 vs 2025",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:festive_season_definition",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d12",
+          "query": "How many orders were cancelled in October 2025? (cancelled orders)",
+          "retrieved": [
+            "metric:cancelled_orders",
+            "metric:cancellation_rate",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d13",
+          "query": "Units sold by category for tier 3 cities (city tier)",
+          "retrieved": [
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:units_sold",
+            "table:gold.agg_monthly_category_sales",
+            "columns:gold.agg_monthly_category_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d14",
+          "query": "Which day of the week has the most orders?",
+          "retrieved": [
+            "columns:gold.agg_daily_sales:2",
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 0.5
+        },
+        {
+          "id": "d15",
+          "query": "Top 3 brands in Fashion by net revenue",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d16",
+          "query": "What is the return rate in 2025?",
+          "retrieved": [
+            "metric:return_rate",
+            "metric:cancellation_rate",
+            "rule:festive_season_definition",
+            "rule:revenue_recognition",
+            "metric:average_discount_pct"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d17",
+          "query": "Net revenue by channel",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d18",
+          "query": "Gross margin from Premium customers in 2025 (customer segment, active customers)",
+          "retrieved": [
+            "glossary:customer_segment",
+            "metric:gross_margin",
+            "metric:active_customers",
+            "metric:gross_margin_pct",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d19",
+          "query": "Average discount percentage during the festive season (average discount %)",
+          "retrieved": [
+            "metric:average_discount_pct",
+            "glossary:festive_season",
+            "metric:discount_amount",
+            "rule:festive_season_definition",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "d20",
+          "query": "Net revenue in the South region in 2024",
+          "retrieved": [
+            "metric:net_revenue",
+            "glossary:region",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t01",
+          "query": "How much money did we make in 2025 after discounts? (discount given)",
+          "retrieved": [
+            "metric:discount_amount",
+            "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
+            "metric:net_revenue",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 0.25
+        },
+        {
+          "id": "t02",
+          "query": "Give me the number of orders placed through the website in 2024.",
+          "retrieved": [
+            "metric:order_count",
+            "metric:all_orders",
+            "metric:returned_orders",
+            "metric:cancelled_orders",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t03",
+          "query": "Which state brought in the most sales? (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t04",
+          "query": "What was the GMV during Diwali season 2025? (gross merchandise value)",
+          "retrieved": [
+            "metric:gross_merchandise_value",
+            "rule:festive_season_definition",
+            "glossary:diwali",
+            "glossary:festive_season",
+            "columns:gold.agg_daily_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t05",
+          "query": "Show the average basket size for each customer segment. (average order value)",
+          "retrieved": [
+            "metric:average_order_value",
+            "metric:average_discount_pct",
+            "table:gold.agg_monthly_city_sales",
+            "glossary:customer_segment",
+            "metric:active_customers"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t06",
+          "query": "What share of COD orders got cancelled?",
+          "retrieved": [
+            "glossary:cod",
+            "metric:cancellation_rate",
+            "metric:cancelled_orders",
+            "metric:all_orders",
+            "rule:revenue_recognition"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t07",
+          "query": "List the five best-selling products by units in 2025. (units sold)",
+          "retrieved": [
+            "metric:units_sold",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_monthly_category_sales:1",
+            "columns:gold.agg_daily_sales:1",
+            "columns:gold.fact_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t08",
+          "query": "How many unique buyers did we have in 2024? (active customers)",
+          "retrieved": [
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "glossary:customer_segment",
+            "columns:gold.dim_customer:1",
+            "columns:gold.fact_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t09",
+          "query": "Quarterly net revenue for 2025.",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t10",
+          "query": "Which region has the lowest average order value?",
+          "retrieved": [
+            "metric:average_order_value",
+            "metric:average_discount_pct",
+            "metric:gross_merchandise_value",
+            "metric:order_count",
+            "glossary:region"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t11",
+          "query": "Total discount given on Electronics in 2024.",
+          "retrieved": [
+            "metric:discount_amount",
+            "metric:average_discount_pct",
+            "columns:gold.fact_sales:3",
+            "rule:festive_season_definition",
+            "glossary:diwali"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t12",
+          "query": "Compare revenue from tier 1 and tier 2 cities. (net revenue, city tier)",
+          "retrieved": [
+            "glossary:city_tier",
+            "columns:gold.agg_monthly_city_sales:2",
+            "metric:net_revenue",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_category_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t13",
+          "query": "What was our gross profit from Bengaluru customers in 2025? (gross margin, active customers)",
+          "retrieved": [
+            "metric:gross_margin",
+            "metric:active_customers",
+            "metric:gross_margin_pct",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_merchandise_value"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t14",
+          "query": "How many orders were returned in 2024? (returned orders)",
+          "retrieved": [
+            "metric:returned_orders",
+            "metric:return_rate",
+            "metric:all_orders",
+            "rule:revenue_recognition",
+            "glossary:revenue_order"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t15",
+          "query": "What was the revenue on Diwali day in 2024? (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "rule:festive_season_definition",
+            "glossary:diwali",
+            "columns:gold.dim_date:2",
+            "columns:gold.agg_daily_sales:1"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t16",
+          "query": "Revenue split by payment mode for Grocery. (net revenue)",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:gross_margin",
+            "rule:revenue_recognition",
+            "columns:gold.agg_monthly_city_sales:2"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t17",
+          "query": "Which month of 2024 had the highest number of orders?",
+          "retrieved": [
+            "metric:order_count",
+            "columns:gold.agg_monthly_city_sales:1",
+            "columns:gold.agg_monthly_category_sales:1",
+            "rule:festive_season_definition",
+            "metric:all_orders"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t18",
+          "query": "What is the margin rate for the Books category? (gross margin %, gross margin)",
+          "retrieved": [
+            "metric:gross_margin_pct",
+            "metric:gross_margin",
+            "columns:gold.agg_monthly_category_sales:2",
+            "metric:average_discount_pct",
+            "columns:gold.fact_sales:3"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t19",
+          "query": "How many orders did Premium customers place on weekends in 2025? (customer segment, active customers)",
+          "retrieved": [
+            "glossary:customer_segment",
+            "metric:active_customers",
+            "rule:customer_city_history",
+            "columns:gold.dim_customer:2",
+            "table:gold.dim_customer"
+          ],
+          "reciprocal_rank": 1.0
+        },
+        {
+          "id": "t20",
+          "query": "Net revenue from Hyderabad by sub category in 2025.",
+          "retrieved": [
+            "metric:net_revenue",
+            "columns:gold.agg_monthly_category_sales:2",
+            "columns:gold.agg_monthly_city_sales:2",
+            "rule:revenue_recognition",
+            "table:gold.agg_monthly_category_sales"
+          ],
+          "reciprocal_rank": 1.0
+        }
+      ],
+      "raw": {
+        "hit@1": 0.825,
+        "hit@3": 0.975,
+        "hit@5": 0.975,
+        "mrr@5": 0.892
+      },
+      "rewritten": {
+        "hit@1": 0.9,
+        "hit@3": 0.975,
+        "hit@5": 1.0,
+        "mrr@5": 0.944
+      }
+    }
+  },
+  "text_to_sql": {
+    "summary": {
+      "dev": {
+        "questions": 20,
+        "correct": 20,
+        "execution_accuracy": 1.0
+      },
+      "test": {
+        "questions": 20,
+        "correct": 16,
+        "execution_accuracy": 0.8
+      },
+      "all": {
+        "questions": 40,
+        "correct": 36,
+        "execution_accuracy": 0.9
+      },
+      "median_latency_s": 0.371,
+      "errors": 0
+    },
+    "per_question": [
+      {
+        "id": "d01",
+        "split": "dev",
+        "question": "What was the total net revenue in 2024?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
+        "error": null,
+        "latency_s": 0.437,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d02",
+        "split": "dev",
+        "question": "How many orders did we get in 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
+        "error": null,
+        "latency_s": 0.492,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d03",
+        "split": "dev",
+        "question": "Top 5 cities by net revenue in 2025",
+        "correct": true,
+        "predicted_sql": "SELECT c.city AS city, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY net_revenue DESC LIMIT 5",
+        "error": null,
+        "latency_s": 0.381,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d04",
+        "split": "dev",
+        "question": "Which payment method has the most orders?",
+        "correct": true,
+        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.365,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d05",
+        "split": "dev",
+        "question": "What is the average order value for UPI vs COD?",
+        "correct": true,
+        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f WHERE f.payment_method IN ('UPI', 'COD') GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.439,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d06",
+        "split": "dev",
+        "question": "Monthly net revenue trend in 2025",
+        "correct": true,
+        "predicted_sql": "SELECT d.year_month AS year_month, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
+        "error": null,
+        "latency_s": 0.336,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d07",
+        "split": "dev",
+        "question": "Net revenue by category during the Diwali festive season 2024",
+        "correct": true,
+        "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND d.is_festive_season = TRUE GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.344,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d08",
+        "split": "dev",
+        "question": "Which category has the highest gross margin percentage?",
+        "correct": true,
+        "predicted_sql": "SELECT p.category AS category, ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS gross_margin_pct FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk GROUP BY 1 ORDER BY gross_margin_pct DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.355,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d09",
+        "split": "dev",
+        "question": "What is the cancellation rate by payment method?",
+        "correct": true,
+        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS cancellation_rate FROM gold.fact_sales AS f GROUP BY 1 ORDER BY cancellation_rate DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.377,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d10",
+        "split": "dev",
+        "question": "How many customers placed an order in Chennai?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city = 'Chennai' LIMIT 200",
+        "error": null,
+        "latency_s": 0.481,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d11",
+        "split": "dev",
+        "question": "Net revenue 2024 vs 2025",
+        "correct": true,
+        "predicted_sql": "SELECT d.year AS year, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year IN (2024, 2025) GROUP BY 1 ORDER BY 1 LIMIT 200",
+        "error": null,
+        "latency_s": 0.38,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d12",
+        "split": "dev",
+        "question": "How many orders were cancelled in October 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END), 2) AS cancelled_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.month = 10 LIMIT 200",
+        "error": null,
+        "latency_s": 0.34,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d13",
+        "split": "dev",
+        "question": "Units sold by category for tier 3 cities",
+        "correct": true,
+        "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE c.city_tier = 3 GROUP BY 1 ORDER BY units_sold DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.354,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d14",
+        "split": "dev",
+        "question": "Which day of the week has the most orders?",
+        "correct": true,
+        "predicted_sql": "SELECT d.day_name AS day_name, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.4,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d15",
+        "split": "dev",
+        "question": "Top 3 brands in Fashion by net revenue",
+        "correct": true,
+        "predicted_sql": "SELECT p.brand AS brand, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Fashion' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 3",
+        "error": null,
+        "latency_s": 0.362,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d16",
+        "split": "dev",
+        "question": "What is the return rate in 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS return_rate FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
+        "error": null,
+        "latency_s": 0.365,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d17",
+        "split": "dev",
+        "question": "Net revenue by channel",
+        "correct": true,
+        "predicted_sql": "SELECT f.channel AS channel, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.355,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d18",
+        "split": "dev",
+        "question": "Gross margin from Premium customers in 2025",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.margin_amount END), 2) AS gross_margin FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND c.segment = 'Premium' LIMIT 200",
+        "error": null,
+        "latency_s": 0.368,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d19",
+        "split": "dev",
+        "question": "Average discount percentage during the festive season",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END) / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END), 2) AS average_discount_pct FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.is_festive_season = TRUE LIMIT 200",
+        "error": null,
+        "latency_s": 0.372,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "d20",
+        "split": "dev",
+        "question": "Net revenue in the South region in 2024",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 AND c.region = 'South' LIMIT 200",
+        "error": null,
+        "latency_s": 0.54,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t01",
+        "split": "test",
+        "question": "How much money did we make in 2025 after discounts?",
+        "correct": false,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
+        "error": null,
+        "latency_s": 0.342,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t02",
+        "split": "test",
+        "question": "Give me the number of orders placed through the website in 2024.",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND f.channel = 'Web' LIMIT 200",
+        "error": null,
+        "latency_s": 0.336,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t03",
+        "split": "test",
+        "question": "Which state brought in the most sales?",
+        "correct": true,
+        "predicted_sql": "SELECT c.state AS state, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY net_revenue DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.383,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t04",
+        "split": "test",
+        "question": "What was the GMV during Diwali season 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.gross_amount END), 2) AS gross_merchandise_value FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.is_festive_season = TRUE LIMIT 200",
+        "error": null,
+        "latency_s": 0.375,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t05",
+        "split": "test",
+        "question": "Show the average basket size for each customer segment.",
+        "correct": true,
+        "predicted_sql": "SELECT c.segment AS segment, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.404,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t06",
+        "split": "test",
+        "question": "What share of COD orders got cancelled?",
+        "correct": false,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f WHERE f.payment_method = 'COD' LIMIT 200",
+        "error": null,
+        "latency_s": 0.356,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t07",
+        "split": "test",
+        "question": "List the five best-selling products by units in 2025.",
+        "correct": false,
+        "predicted_sql": "SELECT p.product_name AS product_name, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY units_sold DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.371,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t08",
+        "split": "test",
+        "question": "How many unique buyers did we have in 2024?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 LIMIT 200",
+        "error": null,
+        "latency_s": 0.344,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t09",
+        "split": "test",
+        "question": "Quarterly net revenue for 2025.",
+        "correct": true,
+        "predicted_sql": "SELECT d.quarter AS quarter, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
+        "error": null,
+        "latency_s": 0.446,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t10",
+        "split": "test",
+        "question": "Which region has the lowest average order value?",
+        "correct": true,
+        "predicted_sql": "SELECT c.region AS region, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value ASC LIMIT 1",
+        "error": null,
+        "latency_s": 0.38,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t11",
+        "split": "test",
+        "question": "Total discount given on Electronics in 2024.",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND p.category = 'Electronics' LIMIT 200",
+        "error": null,
+        "latency_s": 0.389,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t12",
+        "split": "test",
+        "question": "Compare revenue from tier 1 and tier 2 cities.",
+        "correct": true,
+        "predicted_sql": "SELECT c.city_tier AS city_tier, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city_tier IN (1, 2) GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.359,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t13",
+        "split": "test",
+        "question": "What was our gross profit from Bengaluru customers in 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.margin_amount END), 2) AS gross_margin FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND c.city = 'Bengaluru' LIMIT 200",
+        "error": null,
+        "latency_s": 0.362,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t14",
+        "split": "test",
+        "question": "How many orders were returned in 2024?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END), 2) AS returned_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
+        "error": null,
+        "latency_s": 0.39,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t15",
+        "split": "test",
+        "question": "What was the revenue on Diwali day in 2024?",
+        "correct": false,
+        "predicted_sql": "SELECT d.date AS date, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND d.is_diwali = TRUE GROUP BY 1 ORDER BY 1 LIMIT 200",
+        "error": null,
+        "latency_s": 0.384,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t16",
+        "split": "test",
+        "question": "Revenue split by payment mode for Grocery.",
+        "correct": true,
+        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Grocery' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.36,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t17",
+        "split": "test",
+        "question": "Which month of 2024 had the highest number of orders?",
+        "correct": true,
+        "predicted_sql": "SELECT d.year_month AS year_month, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
+        "error": null,
+        "latency_s": 0.358,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t18",
+        "split": "test",
+        "question": "What is the margin rate for the Books category?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS gross_margin_pct FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Books' LIMIT 200",
+        "error": null,
+        "latency_s": 0.369,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t19",
+        "split": "test",
+        "question": "How many orders did Premium customers place on weekends in 2025?",
+        "correct": true,
+        "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND d.is_weekend = TRUE AND c.segment = 'Premium' LIMIT 200",
+        "error": null,
+        "latency_s": 0.357,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      },
+      {
+        "id": "t20",
+        "split": "test",
+        "question": "Net revenue from Hyderabad by sub category in 2025.",
+        "correct": true,
+        "predicted_sql": "SELECT p.sub_category AS sub_category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 AND c.city = 'Hyderabad' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
+        "error": null,
+        "latency_s": 0.371,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
+      }
+    ]
+  }
+}

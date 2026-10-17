@@ -233,7 +233,7 @@ the gold tables.
 terraform -chdir=infra/terraform output -raw env_file_hint > .env
 cat >> .env <<'EOF'
 DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/<id>
-LLM_MODEL=openai/gpt-4o-mini   # or the model chosen in evals/README.md
+LLM_MODEL=google/gemini-2.5-flash   # the model chosen in evals/README.md
 EOF
 echo "DATABRICKS_TOKEN=<paste the token>" >> .env   # or edit .env in your editor
 ```
