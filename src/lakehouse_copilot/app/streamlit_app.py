@@ -54,6 +54,8 @@ def main() -> None:
             f"- **SQL engine:** `{settings.query_engine}`\n"
             f"- **Retriever:** `{settings.retriever}`"
         )
+        if copilot.llm is None and settings.llm_provider == "openrouter":
+            st.caption("Set OPENROUTER_API_KEY to answer with an LLM through OpenRouter.")
         st.subheader("Try these")
         for example in EXAMPLES:
             if st.button(example, use_container_width=True):

@@ -11,6 +11,19 @@ from lakehouse_copilot.data_gen import GeneratorConfig, generate
 SMALL = GeneratorConfig(seed=7, n_customers=300, n_products=60, base_daily_orders=4.0)
 
 
+@pytest.fixture(autouse=True)
+def _no_cloud_keys(monkeypatch: pytest.MonkeyPatch):
+    """Tests never call a real LLM or Key Vault, even if your .env has keys in it."""
+    from lakehouse_copilot.config import get_settings
+
+    monkeypatch.setenv("LLM_PROVIDER", "offline")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "")
+    monkeypatch.setenv("KEY_VAULT_URI", "")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 @pytest.fixture(scope="session")
 def raw_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     out = tmp_path_factory.mktemp("raw")

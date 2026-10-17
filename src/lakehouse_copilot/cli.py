@@ -62,6 +62,11 @@ def _cmd_index(args: argparse.Namespace) -> None:
         indexer = AzureSearchIndexer.from_settings(settings)
         n = indexer.index(chunks, settings.azure_search_index, settings.embedding_dimensions)
         print(f"Uploaded {n} chunks to Azure AI Search index '{settings.azure_search_index}'")
+    elif settings.retriever == "hybrid":
+        from lakehouse_copilot.rag import get_retriever
+
+        retriever = get_retriever(settings)  # embeds new or changed chunks into the cache
+        print(f"Embeddings ready for {len(chunks)} chunks ({retriever.name})")
 
 
 def _cmd_search(args: argparse.Namespace) -> None:
@@ -93,12 +98,36 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
 def _cmd_ask(args: argparse.Namespace) -> None:
     from lakehouse_copilot.agent.copilot import build_copilot
 
-    answer = build_copilot().answer(args.question)
+    copilot = build_copilot(model=args.model)
+    _warn_if_offline(copilot)
+    answer = copilot.answer(args.question)
     print(answer.answer)
     print()
     print(answer.sources)
     if args.verbose:
         print(f"\nMode: {answer.mode}\nSearch query: {answer.rewritten.text}\nSQL:\n{answer.sql}")
+        if answer.usage.calls:
+            u = answer.usage
+            cost = f"${u.cost_usd:.5f}" if u.cost_usd is not None else "not reported"
+            print(
+                f"LLM calls: {u.calls}, tokens: {u.prompt_tokens} in / "
+                f"{u.completion_tokens} out, cost: {cost}"
+            )
+        for step in answer.steps:
+            status = f"error: {step.error}" if step.error else "ok"
+            print(f"  step {step.tool}: {status}")
+
+
+def _warn_if_offline(copilot) -> None:
+    import sys
+
+    settings = get_settings()
+    if copilot.llm is None and settings.llm_provider == "openrouter":
+        print(
+            "Note: OPENROUTER_API_KEY is not set, so the copilot runs offline "
+            "(rule-based planner).",
+            file=sys.stderr,
+        )
 
 
 def _cmd_ui(args: argparse.Namespace) -> None:
@@ -114,9 +143,31 @@ def _cmd_eval(args: argparse.Namespace) -> None:
     from lakehouse_copilot.agent.copilot import build_copilot
     from lakehouse_copilot.evals.run import run_evaluation, save_report
 
-    report = run_evaluation(build_copilot(), split=args.split)
+    copilot = build_copilot(model=args.model)
+    _warn_if_offline(copilot)
+    report = run_evaluation(copilot, split=args.split)
     json_path, md_path = save_report(report, args.out)
     print(md_path.read_text(encoding="utf-8").split("## Per question")[0])
+    print(f"Saved {json_path} and {md_path}")
+
+
+def _cmd_bench(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.agent.copilot import Copilot
+    from lakehouse_copilot.agent.llm import get_chat_model
+    from lakehouse_copilot.evals.bench import benchmark, save
+    from lakehouse_copilot.tools import LakehouseTools
+
+    settings = get_settings()
+    tools = LakehouseTools.from_settings(settings)
+    copilots = {"offline planner": Copilot(tools)} if not args.no_offline else {}
+    for model in [m.strip() for m in args.models.split(",") if m.strip()]:
+        llm = get_chat_model(settings, model)
+        if llm is None:
+            raise SystemExit("lhc bench needs LLM_PROVIDER=openrouter and OPENROUTER_API_KEY.")
+        copilots[model] = Copilot(tools, llm)
+    report = benchmark(copilots, split=args.split)
+    json_path, md_path = save(report, args.out)
+    print(md_path.read_text(encoding="utf-8"))
     print(f"Saved {json_path} and {md_path}")
 
 
@@ -155,6 +206,7 @@ def build_parser() -> argparse.ArgumentParser:
     ask = sub.add_parser("ask", help="ask the copilot a question")
     ask.add_argument("question")
     ask.add_argument("-v", "--verbose", action="store_true", help="show the search query and SQL")
+    ask.add_argument("--model", help="LLM model id, overrides LLM_MODEL")
     ask.set_defaults(func=_cmd_ask)
 
     ui = sub.add_parser("ui", help="start the Streamlit chat UI")
@@ -163,7 +215,15 @@ def build_parser() -> argparse.ArgumentParser:
     ev = sub.add_parser("eval", help="evaluate retrieval and text-to-SQL accuracy")
     ev.add_argument("--split", choices=["all", "dev", "test"], default="all")
     ev.add_argument("--out", default="evals/results", help="folder for the reports")
+    ev.add_argument("--model", help="LLM model id, overrides LLM_MODEL")
     ev.set_defaults(func=_cmd_eval)
+
+    bench = sub.add_parser("bench", help="compare LLMs on the golden set (accuracy, cost)")
+    bench.add_argument("--models", required=True, help="comma-separated OpenRouter model ids")
+    bench.add_argument("--split", choices=["all", "dev", "test"], default="all")
+    bench.add_argument("--no-offline", action="store_true", help="skip the offline baseline")
+    bench.add_argument("--out", default="evals/results", help="folder for the reports")
+    bench.set_defaults(func=_cmd_bench)
     return parser
 
 

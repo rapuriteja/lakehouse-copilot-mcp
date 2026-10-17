@@ -25,7 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 spark = ["pyspark>=4.0,<5"]
-azure = ["azure-search-documents>=11.6"]
+azure = ["azure-search-documents>=11.6", "azure-identity>=1.17", "azure-keyvault-secrets>=4.8"]
+local-embeddings = ["sentence-transformers>=3.0"]
 databricks = ["databricks-sql-connector>=3.4"]
 ui = ["streamlit>=1.38"]
 dev = [

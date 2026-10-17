@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from lakehouse_copilot.agent.format import format_answer_table, format_number
-from lakehouse_copilot.agent.llm import ChatModel
+from lakehouse_copilot.agent.llm import ChatModel, ChatResponse, Usage
 from lakehouse_copilot.agent.rewrite import LLMRewriter, RewrittenQuery, SynonymRewriter
 from lakehouse_copilot.agent.semantic import SemanticPlanner, load_dimension_values
 from lakehouse_copilot.tools import LakehouseTools, ToolError
@@ -111,6 +111,7 @@ class CopilotAnswer:
     doc_ids: list[str] = field(default_factory=list)
     steps: list[Step] = field(default_factory=list)
     mode: str = "offline"
+    usage: Usage = field(default_factory=Usage)
 
     @property
     def sources(self) -> str:
@@ -120,6 +121,20 @@ class CopilotAnswer:
         if self.doc_ids:
             parts.append("docs " + ", ".join(self.doc_ids))
         return "Sources: " + "; ".join(parts) if parts else ""
+
+
+class _TrackedModel:
+    """Wraps a chat model and adds up the tokens and cost of every call."""
+
+    def __init__(self, llm: ChatModel) -> None:
+        self.llm = llm
+        self.name = llm.name
+        self.usage = Usage()
+
+    def chat(self, messages: list[dict], tools: list[dict] | None = None) -> ChatResponse:
+        response = self.llm.chat(messages, tools)
+        self.usage = self.usage + response.usage
+        return response
 
 
 class Copilot:
@@ -133,11 +148,11 @@ class Copilot:
         use_rewriting: bool = True,
     ) -> None:
         self.tools = tools
-        self.llm = llm
+        self.llm = _TrackedModel(llm) if llm else None
         self.max_steps = max_steps
         self.docs_k = docs_k
         self.use_rewriting = use_rewriting
-        self.rewriter = LLMRewriter(llm) if llm else SynonymRewriter(tools.catalog)
+        self.rewriter = LLMRewriter(self.llm) if self.llm else SynonymRewriter(tools.catalog)
         self._planner: SemanticPlanner | None = None
 
     @property
@@ -156,6 +171,8 @@ class Copilot:
 
     def answer(self, question: str, history: list[dict] | None = None) -> CopilotAnswer:
         history = history or []
+        if self.llm:
+            self.llm.usage = Usage()
         if self.use_rewriting:
             rewritten = self.rewriter.rewrite(question, history)
         else:
@@ -170,6 +187,7 @@ class Copilot:
             self._answer_offline(rewritten.question, out)
         else:
             self._answer_with_llm(question, history, docs, out)
+            out.usage = self.llm.usage
         return out
 
     # ------------------------------------------------------------ offline
@@ -258,15 +276,16 @@ class Copilot:
                 step.output = len(result)
             else:
                 raise ToolError(f"Unknown tool {name}")
-        except ToolError as e:
+        except (ToolError, TypeError, ValueError) as e:  # bad arguments from the model too
             step.error = str(e)
             return json.dumps({"error": str(e)})
         return json.dumps(result, default=str)[:MAX_TOOL_RESULT_CHARS]
 
 
-def build_copilot(settings=None) -> Copilot:
+def build_copilot(settings=None, model: str | None = None) -> Copilot:
+    """The copilot from settings. `model` overrides LLM_MODEL (used by the benchmark)."""
     from lakehouse_copilot.agent.llm import get_chat_model
     from lakehouse_copilot.config import get_settings
 
     settings = settings or get_settings()
-    return Copilot(LakehouseTools.from_settings(settings), get_chat_model(settings))
+    return Copilot(LakehouseTools.from_settings(settings), get_chat_model(settings, model))
