@@ -190,7 +190,7 @@ metrics:
     label: Gross margin %
     description: Gross margin as a percentage of net revenue.
     sql: 100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END)
-    synonyms: [margin percent, margin rate, profitability, profit margin]
+    synonyms: [margin percent, margin percentage, gross margin percentage, margin rate, profitability, profit margin]
   - name: discount_amount
     label: Discount given
     description: Total discount in INR on revenue orders.

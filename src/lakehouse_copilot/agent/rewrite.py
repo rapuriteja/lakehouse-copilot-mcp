@@ -24,8 +24,13 @@ FOLLOW_UP = re.compile(r"^(and|what about|how about|same for|now|also|only|just)
 @dataclass(frozen=True)
 class RewrittenQuery:
     original: str
-    text: str
+    text: str  # search query for retrieval (may include expanded names)
     method: str
+    standalone: str = ""  # the full question after resolving follow-ups, no expansions
+
+    @property
+    def question(self) -> str:
+        return self.standalone or self.text
 
 
 def _previous_user_question(history: list[dict]) -> str | None:
@@ -54,6 +59,7 @@ class SynonymRewriter:
             if YEAR.search(text):
                 previous = YEAR.sub("", previous)
             text = f"{previous} {text}"
+        standalone = text
         norm = normalise(text)
         expansions = []
         for synonym, canonical in self.terms:
@@ -62,7 +68,7 @@ class SynonymRewriter:
                 expansions.append(canonical)
         if expansions:
             text = f"{text} ({', '.join(expansions)})"
-        return RewrittenQuery(question, text, self.method)
+        return RewrittenQuery(question, text, self.method, standalone)
 
 
 REWRITE_PROMPT = """You rewrite questions for a search engine over a data catalog of an
@@ -87,4 +93,4 @@ class LLMRewriter:
             {"role": "user", "content": f"Conversation:\n{convo}\n\nLast question: {question}"},
         ]
         text = (self.llm.chat(messages).content or question).strip()
-        return RewrittenQuery(question, text, self.method)
+        return RewrittenQuery(question, text, self.method, standalone=text)

@@ -126,6 +126,7 @@ REGION_PATTERN = re.compile(
     r"|\b(?:region|zone)\s+(north|south|east|west|central)\b"
 )
 
+WEAK_METRIC_WORDS = {"orders", "customers"}
 RANK_DESC = ("highest", "most", "best", "maximum", "max", "largest", "biggest", "top", "peak")
 RANK_ASC = ("lowest", "least", "worst", "minimum", "min", "smallest", "bottom", "fewest")
 
@@ -237,17 +238,18 @@ class SemanticPlanner:
         return plan
 
     def _find_metrics(self, text: str, plan: QueryPlan) -> str:
-        weak: set[str] = set()  # metrics found only through the bare word "orders"
+        weak: set[str] = set()  # metrics found only through a bare noun like "orders"
         for phrase, metric in self.metric_phrases:
             match = _find(phrase, text)
             while match:
                 if metric not in plan.metrics:
                     plan.metrics.append(metric)
-                    if phrase == "orders":
+                    if phrase in WEAK_METRIC_WORDS:
                         weak.add(metric.name)
                 text = _mask(text, match)
                 match = _find(phrase, text)
-        # "AOV for COD orders": here "orders" describes the filter, it is not a second metric.
+        # "AOV for COD orders" or "margin from Premium customers": the noun describes a
+        # filter, it is not a second metric.
         if len(plan.metrics) > 1:
             plan.metrics = [m for m in plan.metrics if m.name not in weak]
         return text

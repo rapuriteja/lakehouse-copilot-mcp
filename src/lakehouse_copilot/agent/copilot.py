@@ -166,7 +166,8 @@ class Copilot:
         out.doc_ids = [d["id"] for d in docs[:3]]
 
         if self.llm is None:
-            self._answer_offline(rewritten.text, out)
+            # Expansions help search, but the planner reads the user's own words.
+            self._answer_offline(rewritten.question, out)
         else:
             self._answer_with_llm(question, history, docs, out)
         return out
