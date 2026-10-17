@@ -1,7 +1,8 @@
 # Lakehouse Copilot on Azure:
 #   ADLS Gen2 (landing + lakehouse) -> Azure Databricks with Unity Catalog (access connector)
-#   Azure AI Search (RAG index) + Azure OpenAI (chat + embeddings)
-#   Key Vault for secrets, Log Analytics + Application Insights for monitoring
+#   Azure AI Search (RAG index); the LLM and embeddings come from OpenRouter
+#   Key Vault for secrets (OpenRouter + AI Search keys), Log Analytics + Application Insights
+#   Azure OpenAI is optional and off by default (enable_azure_openai = true to add it)
 
 data "azurerm_client_config" "current" {}
 
@@ -15,9 +16,18 @@ locals {
   name = "${var.project}-${var.environment}"
   flat = "${var.project}${var.environment}${random_string.suffix.result}" # for names without dashes
   tags = merge(var.tags, { environment = var.environment })
+
+  # Which secrets go into Key Vault. Names only (not values), so for_each is never sensitive.
+  store_openrouter_key = nonsensitive(var.openrouter_api_key != null && var.openrouter_api_key != "")
+  secret_names = concat(
+    ["azure-search-api-key"],
+    local.store_openrouter_key ? ["openrouter-api-key"] : [],
+    var.enable_azure_openai ? ["azure-openai-api-key"] : [],
+  )
   secret_values = {
     "azure-search-api-key" = azurerm_search_service.this.primary_key
-    "azure-openai-api-key" = azurerm_cognitive_account.openai.primary_access_key
+    "openrouter-api-key"   = var.openrouter_api_key
+    "azure-openai-api-key" = one(azurerm_cognitive_account.openai[*].primary_access_key)
   }
 }
 
@@ -123,9 +133,11 @@ resource "azurerm_search_service" "this" {
   tags                = local.tags
 }
 
-# ------------------------------------------------------------------ Azure OpenAI
+# ------------------------------------------------------------------ Azure OpenAI (optional)
+# Off by default: the copilot uses OpenRouter. Set enable_azure_openai = true to create it.
 
 resource "azurerm_cognitive_account" "openai" {
+  count                 = var.enable_azure_openai ? 1 : 0
   name                  = "oai-${local.name}-${random_string.suffix.result}"
   location              = var.openai_location
   resource_group_name   = azurerm_resource_group.this.name
@@ -136,8 +148,9 @@ resource "azurerm_cognitive_account" "openai" {
 }
 
 resource "azurerm_cognitive_deployment" "chat" {
+  count                = var.enable_azure_openai ? 1 : 0
   name                 = var.chat_model.name
-  cognitive_account_id = azurerm_cognitive_account.openai.id
+  cognitive_account_id = azurerm_cognitive_account.openai[0].id
 
   model {
     format  = "OpenAI"
@@ -152,8 +165,9 @@ resource "azurerm_cognitive_deployment" "chat" {
 }
 
 resource "azurerm_cognitive_deployment" "embedding" {
+  count                = var.enable_azure_openai ? 1 : 0
   name                 = var.embedding_model.name
-  cognitive_account_id = azurerm_cognitive_account.openai.id
+  cognitive_account_id = azurerm_cognitive_account.openai[0].id
 
   model {
     format  = "OpenAI"
@@ -168,8 +182,9 @@ resource "azurerm_cognitive_deployment" "embedding" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "openai" {
+  count                      = var.enable_azure_openai ? 1 : 0
   name                       = "diag-openai"
-  target_resource_id         = azurerm_cognitive_account.openai.id
+  target_resource_id         = azurerm_cognitive_account.openai[0].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
 
   enabled_log {
@@ -201,9 +216,40 @@ resource "azurerm_role_assignment" "kv_deployer" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-# Service keys go straight into Key Vault; they never appear in code or outputs.
+# Databricks reads Key Vault through a Key Vault-backed secret scope. The scope acts as the
+# "AzureDatabricks" enterprise application, which needs read access to secrets.
+# Its object id differs per tenant. Terraform looks it up unless you pass it (CI does, because
+# a deploy service principal usually may not read the directory):
+#   az ad sp show --id 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query id -o tsv
+data "azuread_service_principal" "azure_databricks" {
+  count      = var.azure_databricks_sp_object_id == null || var.azure_databricks_sp_object_id == "" ? 1 : 0
+  client_id  = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d" # same app id in every Entra tenant
+  depends_on = [azurerm_databricks_workspace.this]
+}
+
+resource "azurerm_role_assignment" "kv_databricks" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id = coalesce(
+    var.azure_databricks_sp_object_id,
+    one(data.azuread_service_principal.azure_databricks[*].object_id),
+  )
+}
+
+# Extra people or app identities that may read secrets (for example the copilot app).
+resource "azurerm_role_assignment" "kv_readers" {
+  for_each             = toset(var.key_vault_reader_object_ids)
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = each.value
+}
+
+# Keys go straight into Key Vault; they never appear in code or outputs. The OpenRouter key
+# comes from TF_VAR_openrouter_api_key (a GitHub secret in the deploy workflow). Like every
+# secret Terraform writes, it is also in the state file, so keep the state in a private,
+# access-controlled storage account (backend.tf.example).
 resource "azurerm_key_vault_secret" "this" {
-  for_each     = toset(["azure-search-api-key", "azure-openai-api-key"])
+  for_each     = toset(local.secret_names)
   name         = each.key
   value        = local.secret_values[each.key]
   key_vault_id = azurerm_key_vault.this.id

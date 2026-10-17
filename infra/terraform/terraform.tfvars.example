@@ -1,6 +1,8 @@
 # Copy to terraform.tfvars and adjust. Nothing here is secret.
-project         = "lhcopilot"
-environment     = "dev"
-location        = "centralindia"
-openai_location = "eastus"
-search_sku      = "free"
+# The OpenRouter key is NOT set here: export TF_VAR_openrouter_api_key in your shell
+# (or the OPENROUTER_API_KEY GitHub secret in the deploy workflow).
+project             = "lhcopilot"
+environment         = "dev"
+location            = "centralindia"
+search_sku          = "free"
+enable_azure_openai = false # the copilot uses OpenRouter

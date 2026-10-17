@@ -30,7 +30,8 @@ output "azure_search_endpoint" {
 }
 
 output "azure_openai_endpoint" {
-  value = azurerm_cognitive_account.openai.endpoint
+  description = "Only set when enable_azure_openai = true."
+  value       = one(azurerm_cognitive_account.openai[*].endpoint)
 }
 
 output "application_insights_connection_string" {
@@ -39,15 +40,19 @@ output "application_insights_connection_string" {
 }
 
 output "env_file_hint" {
-  description = "Values for your .env (keys are in Key Vault)."
+  description = "Values for your .env. Keys are read from Key Vault, so none are printed."
   value       = <<-EOT
+    LLM_PROVIDER=openrouter
+    EMBEDDING_PROVIDER=openrouter
     RETRIEVER=azure
-    LLM_PROVIDER=azure
     QUERY_ENGINE=databricks
+    KEY_VAULT_URI=${azurerm_key_vault.this.vault_uri}
     AZURE_SEARCH_ENDPOINT=https://${azurerm_search_service.this.name}.search.windows.net
-    AZURE_OPENAI_ENDPOINT=${azurerm_cognitive_account.openai.endpoint}
-    AZURE_OPENAI_CHAT_DEPLOYMENT=${azurerm_cognitive_deployment.chat.name}
-    AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${azurerm_cognitive_deployment.embedding.name}
     DATABRICKS_HOST=${azurerm_databricks_workspace.this.workspace_url}
   EOT
+}
+
+output "key_vault_id" {
+  description = "Resource id for the Databricks Key Vault-backed secret scope."
+  value       = azurerm_key_vault.this.id
 }

@@ -21,14 +21,39 @@ variable "location" {
   default     = "centralindia"
 }
 
+variable "openrouter_api_key" {
+  description = "OpenRouter API key, stored in Key Vault. Pass it as TF_VAR_openrouter_api_key, never in a file. Leave unset to add the secret by hand."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "azure_databricks_sp_object_id" {
+  description = "Object id of the AzureDatabricks enterprise app in your tenant. Leave null to look it up."
+  type        = string
+  default     = null
+}
+
+variable "key_vault_reader_object_ids" {
+  description = "Object ids of users or managed identities that may read Key Vault secrets."
+  type        = list(string)
+  default     = []
+}
+
+variable "enable_azure_openai" {
+  description = "Also create Azure OpenAI (optional; the copilot uses OpenRouter by default)."
+  type        = bool
+  default     = false
+}
+
 variable "openai_location" {
-  description = "Region for Azure OpenAI. Pick one where your models are available."
+  description = "Region for Azure OpenAI (only used when enable_azure_openai = true)."
   type        = string
   default     = "eastus"
 }
 
 variable "chat_model" {
-  description = "Azure OpenAI chat model used by the copilot."
+  description = "Azure OpenAI chat model (only when enable_azure_openai = true)."
   type = object({
     name     = string
     version  = string
@@ -44,7 +69,7 @@ variable "chat_model" {
 }
 
 variable "embedding_model" {
-  description = "Azure OpenAI embedding model for the RAG index."
+  description = "Azure OpenAI embedding model (only when enable_azure_openai = true)."
   type = object({
     name     = string
     version  = string
