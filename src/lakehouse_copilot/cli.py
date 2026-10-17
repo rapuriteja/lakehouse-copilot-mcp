@@ -90,6 +90,26 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
     serve(http=args.http, host=args.host, port=args.port)
 
 
+def _cmd_ask(args: argparse.Namespace) -> None:
+    from lakehouse_copilot.agent.copilot import build_copilot
+
+    answer = build_copilot().answer(args.question)
+    print(answer.answer)
+    print()
+    print(answer.sources)
+    if args.verbose:
+        print(f"\nMode: {answer.mode}\nSearch query: {answer.rewritten.text}\nSQL:\n{answer.sql}")
+
+
+def _cmd_ui(args: argparse.Namespace) -> None:
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    app = Path(__file__).parent / "app" / "streamlit_app.py"
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app)], check=False)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="lhc", description="Lakehouse Copilot command line")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -121,6 +141,14 @@ def build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--host", default="127.0.0.1")
     mcp.add_argument("--port", type=int, default=8000)
     mcp.set_defaults(func=_cmd_mcp)
+
+    ask = sub.add_parser("ask", help="ask the copilot a question")
+    ask.add_argument("question")
+    ask.add_argument("-v", "--verbose", action="store_true", help="show the search query and SQL")
+    ask.set_defaults(func=_cmd_ask)
+
+    ui = sub.add_parser("ui", help="start the Streamlit chat UI")
+    ui.set_defaults(func=_cmd_ui)
     return parser
 
 

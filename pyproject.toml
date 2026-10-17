@@ -20,17 +20,16 @@ dependencies = [
     "duckdb>=1.1",
     "sqlglot>=25",
     "mcp>=2.0",
+    "openai>=1.50",
 ]
 
 [project.optional-dependencies]
 spark = ["pyspark>=4.0,<5"]
-azure = [
-    "azure-search-documents>=11.6",
-    "openai>=1.50",
-]
+azure = ["azure-search-documents>=11.6"]
 databricks = ["databricks-sql-connector>=3.4"]
+ui = ["streamlit>=1.38"]
 dev = [
-    "lakehouse-copilot[spark]",
+    "lakehouse-copilot[spark,ui,azure]",
     "pytest>=8",
     "ruff>=0.6",
 ]
