@@ -2,6 +2,8 @@
 
 lhc eval                  # all questions, configured retriever and LLM mode
 lhc eval --split test     # held-out questions only
+lhc eval --model X        # LLM mode with OpenRouter model X
+lhc bench --models A,B,C  # compare models: accuracy, cost, latency
 """
 
 from __future__ import annotations
@@ -79,13 +81,15 @@ def evaluate_sql(copilot: Copilot, questions: list[GoldenQuestion]) -> dict:
     for q in questions:
         gold = copilot.tools.run_sql(q.gold_sql)["rows"]
         started = time.perf_counter()
-        error = None
+        error, usage = None, None
         try:
             answer = copilot.answer(q.question)
             predicted = answer.result["rows"] if answer.result else None
-            sql = answer.sql
-        except (ToolError, RuntimeError) as e:  # count crashes as wrong, keep going
+            sql, usage = answer.sql, answer.usage
+        except ToolError as e:
             predicted, sql, error = None, None, str(e)
+        except Exception as e:  # API errors, timeouts: count as wrong, keep going
+            predicted, sql, error = None, None, f"{type(e).__name__}: {e}"
         latency = time.perf_counter() - started
         correct = predicted is not None and results_match(predicted, gold, q.order_matters)
         rows.append(
@@ -97,6 +101,10 @@ def evaluate_sql(copilot: Copilot, questions: list[GoldenQuestion]) -> dict:
                 "predicted_sql": sql,
                 "error": error,
                 "latency_s": round(latency, 3),
+                "prompt_tokens": usage.prompt_tokens if usage else 0,
+                "completion_tokens": usage.completion_tokens if usage else 0,
+                "cost_usd": usage.cost_usd if usage else None,
+                "llm_calls": usage.calls if usage else 0,
             }
         )
     summary = {}
@@ -110,7 +118,23 @@ def evaluate_sql(copilot: Copilot, questions: list[GoldenQuestion]) -> dict:
             }
     latencies = sorted(r["latency_s"] for r in rows)
     summary["median_latency_s"] = latencies[len(latencies) // 2] if latencies else None
+    summary["errors"] = sum(1 for r in rows if r["error"])
+    summary |= _usage_summary(rows)
     return {"summary": summary, "per_question": rows}
+
+
+def _usage_summary(rows: list[dict]) -> dict:
+    calls = sum(r["llm_calls"] for r in rows)
+    if not calls:
+        return {}
+    costs = [r["cost_usd"] for r in rows if r["cost_usd"] is not None]
+    return {
+        "llm_calls": calls,
+        "prompt_tokens": sum(r["prompt_tokens"] for r in rows),
+        "completion_tokens": sum(r["completion_tokens"] for r in rows),
+        # Only a real total when every question reported its cost.
+        "total_cost_usd": round(sum(costs), 6) if len(costs) == len(rows) else None,
+    }
 
 
 def run_evaluation(copilot: Copilot, split: str = "all") -> dict:
@@ -166,10 +190,22 @@ def render_markdown(report: dict) -> str:
                 f"| {split} | {s[split]['correct']}/{s[split]['questions']} | "
                 f"{s[split]['execution_accuracy']:.0%} |"
             )
-    lines += ["", f"Median latency per question: {s['median_latency_s']} s", ""]
-    lines += ["## Per question", "", "| Id | Question | Correct |", "|---|---|---|"]
+    lines += ["", f"Median latency per question: {s['median_latency_s']} s"]
+    if "llm_calls" in s:
+        cost = s["total_cost_usd"]
+        lines += [
+            f"LLM calls: {s['llm_calls']}, tokens: {s['prompt_tokens']:,} in / "
+            f"{s['completion_tokens']:,} out, cost of the run: "
+            + (f"${cost:.4f}" if cost is not None else "not reported"),
+            f"Questions that failed with an error: {s['errors']}",
+        ]
+    lines += [""]
+    lines += ["## Per question", "", "| Id | Question | Correct | Note |", "|---|---|---|---|"]
     for r in report["text_to_sql"]["per_question"]:
-        lines.append(f"| {r['id']} | {r['question']} | {'yes' if r['correct'] else 'no'} |")
+        note = (r["error"] or "").replace("|", "/").replace("\n", " ")[:120]
+        lines.append(
+            f"| {r['id']} | {r['question']} | {'yes' if r['correct'] else 'no'} | {note} |"
+        )
     return "\n".join(lines) + "\n"
 
 
