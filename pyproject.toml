@@ -36,6 +36,7 @@ dev = [
 
 [project.scripts]
 lhc = "lakehouse_copilot.cli:main"
+lakehouse-job = "lakehouse_copilot.databricks_job:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
