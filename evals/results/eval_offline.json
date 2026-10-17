@@ -1030,7 +1030,8 @@
         "correct": 36,
         "execution_accuracy": 0.9
       },
-      "median_latency_s": 0.012
+      "median_latency_s": 0.012,
+      "errors": 0
     },
     "per_question": [
       {
@@ -1040,7 +1041,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.057
+        "latency_s": 0.042,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d02",
@@ -1049,7 +1054,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.016
+        "latency_s": 0.015,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d03",
@@ -1058,7 +1067,11 @@
         "correct": true,
         "predicted_sql": "SELECT c.city AS city, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY net_revenue DESC LIMIT 5",
         "error": null,
-        "latency_s": 0.017
+        "latency_s": 0.016,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d04",
@@ -1067,16 +1080,24 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.022
+        "latency_s": 0.019,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d05",
         "split": "dev",
         "question": "What is the average order value for UPI vs COD?",
         "correct": true,
-        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f WHERE f.payment_method IN ('UPI', 'COD') GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
+        "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f WHERE f.payment_method IN ('COD', 'UPI') GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.023
+        "latency_s": 0.014,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d06",
@@ -1085,7 +1106,11 @@
         "correct": true,
         "predicted_sql": "SELECT d.year_month AS year_month, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.013
+        "latency_s": 0.011,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d07",
@@ -1094,7 +1119,11 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND d.is_festive_season = TRUE GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.014
+        "latency_s": 0.014,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d08",
@@ -1103,7 +1132,11 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS gross_margin_pct FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk GROUP BY 1 ORDER BY gross_margin_pct DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.016
+        "latency_s": 0.017,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d09",
@@ -1112,7 +1145,11 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS cancellation_rate FROM gold.fact_sales AS f GROUP BY 1 ORDER BY cancellation_rate DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.022
+        "latency_s": 0.022,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d10",
@@ -1121,7 +1158,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city = 'Chennai' LIMIT 200",
         "error": null,
-        "latency_s": 0.013
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d11",
@@ -1130,7 +1171,11 @@
         "correct": true,
         "predicted_sql": "SELECT d.year AS year, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year IN (2024, 2025) GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.01,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d12",
@@ -1139,7 +1184,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END), 2) AS cancelled_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.month = 10 LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.011,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d13",
@@ -1148,7 +1197,11 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE c.city_tier = 3 GROUP BY 1 ORDER BY units_sold DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.015
+        "latency_s": 0.014,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d14",
@@ -1157,7 +1210,11 @@
         "correct": true,
         "predicted_sql": "SELECT d.day_name AS day_name, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.022
+        "latency_s": 0.021,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d15",
@@ -1166,7 +1223,11 @@
         "correct": true,
         "predicted_sql": "SELECT p.brand AS brand, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Fashion' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 3",
         "error": null,
-        "latency_s": 0.016
+        "latency_s": 0.013,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d16",
@@ -1175,7 +1236,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS return_rate FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.017
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d17",
@@ -1184,7 +1249,11 @@
         "correct": true,
         "predicted_sql": "SELECT f.channel AS channel, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.007,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d18",
@@ -1193,7 +1262,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.margin_amount END), 2) AS gross_margin FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND c.segment = 'Premium' LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d19",
@@ -1202,7 +1275,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.discount_amount END) / SUM(CASE WHEN f.is_revenue THEN f.gross_amount END), 2) AS average_discount_pct FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.is_festive_season = TRUE LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.01,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "d20",
@@ -1211,7 +1288,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 AND c.region = 'South' LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.008,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t01",
@@ -1220,7 +1301,11 @@
         "correct": false,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t02",
@@ -1229,7 +1314,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND f.channel = 'Web' LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t03",
@@ -1238,7 +1327,11 @@
         "correct": true,
         "predicted_sql": "SELECT c.state AS state, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY net_revenue DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.017
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t04",
@@ -1247,7 +1340,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.gross_amount END), 2) AS gross_merchandise_value FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.is_festive_season = TRUE LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.007,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t05",
@@ -1256,7 +1353,11 @@
         "correct": true,
         "predicted_sql": "SELECT c.segment AS segment, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.028
+        "latency_s": 0.02,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t06",
@@ -1265,7 +1366,11 @@
         "correct": false,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f WHERE f.payment_method = 'COD' LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.008,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t07",
@@ -1274,7 +1379,11 @@
         "correct": false,
         "predicted_sql": "SELECT p.product_name AS product_name, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY units_sold DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.017
+        "latency_s": 0.01,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t08",
@@ -1283,7 +1392,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t09",
@@ -1292,7 +1405,11 @@
         "correct": true,
         "predicted_sql": "SELECT d.quarter AS quarter, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.014
+        "latency_s": 0.008,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t10",
@@ -1301,7 +1418,11 @@
         "correct": true,
         "predicted_sql": "SELECT c.region AS region, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value ASC LIMIT 1",
         "error": null,
-        "latency_s": 0.028
+        "latency_s": 0.024,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t11",
@@ -1310,7 +1431,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND p.category = 'Electronics' LIMIT 200",
         "error": null,
-        "latency_s": 0.008
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t12",
@@ -1319,7 +1444,11 @@
         "correct": true,
         "predicted_sql": "SELECT c.city_tier AS city_tier, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city_tier IN (1, 2) GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t13",
@@ -1328,7 +1457,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.margin_amount END), 2) AS gross_margin FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND c.city = 'Bengaluru' LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t14",
@@ -1337,7 +1470,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END), 2) AS returned_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t15",
@@ -1346,7 +1483,11 @@
         "correct": false,
         "predicted_sql": "SELECT d.date AS date, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND d.is_diwali = TRUE GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.009,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t16",
@@ -1355,7 +1496,11 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Grocery' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t17",
@@ -1364,7 +1509,11 @@
         "correct": true,
         "predicted_sql": "SELECT d.year_month AS year_month, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.016,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t18",
@@ -1373,7 +1522,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS gross_margin_pct FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Books' LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t19",
@@ -1382,7 +1535,11 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND d.is_weekend = TRUE AND c.segment = 'Premium' LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.013,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       },
       {
         "id": "t20",
@@ -1391,7 +1548,11 @@
         "correct": true,
         "predicted_sql": "SELECT p.sub_category AS sub_category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 AND c.city = 'Hyderabad' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.012,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cost_usd": null,
+        "llm_calls": 0
       }
     ]
   }
