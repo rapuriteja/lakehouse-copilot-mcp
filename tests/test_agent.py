@@ -165,6 +165,15 @@ def test_llm_loop_recovers_from_rejected_sql(tools) -> None:
     assert answer.rewritten.text == "net revenue in 2024"
 
 
+def test_system_prompt_lists_gold_tables_and_columns(tools) -> None:
+    llm = ScriptedLLM([ChatResponse("Done.")])
+    Copilot(tools, llm).answer("How much did we sell?")
+    system = llm.calls[-1][0]["content"]
+    # The model sees real table and column names, so it does not have to guess them.
+    assert "- gold.fact_sales (one row per order_item_id): order_item_id" in system
+    assert "day_name" in system and "gold.agg_monthly_city_sales" in system
+
+
 def test_llm_loop_stops_at_step_limit(tools) -> None:
     looping = [ChatResponse(None, [ToolCall(str(i), "list_tables", {})]) for i in range(10)]
     answer = Copilot(tools, ScriptedLLM(looping), max_steps=3).answer("loop forever")

@@ -34,11 +34,19 @@ How to work:
 2. Write ONE {dialect} SELECT for run_sql. Use only gold.* tables and the official metric
    SQL from the docs. Revenue, orders, units, AOV and margin only count rows where
    f.is_revenue = true. Count customers with COUNT(DISTINCT customer_id).
-3. If run_sql returns an error, read it, fix the SQL and try again.
-4. Answer in 1-3 short sentences with the numbers from the result. Money is INR;
+3. Start from gold.fact_sales joined to the dimensions. Use a gold.agg_* table only when
+   every column you need is already in it; never join agg_* tables to each other or to
+   dimensions, because their grain does not match.
+4. Return one row per group with the group label first (for example the day name, not a
+   weekday number) and only the columns the question asks for.
+5. If run_sql returns an error, read it, fix the SQL and try again.
+6. Answer in 1-3 short sentences with the numbers from the result. Money is INR;
    use Indian formatting (lakh, crore) for large amounts. Do not invent numbers.
    If the data cannot answer the question, say so.
-Data covers 2024-01-01 to 2025-12-31."""
+Data covers 2024-01-01 to 2025-12-31.
+
+Gold tables (name, grain: columns):
+{schema}"""
 
 TOOL_SPECS: list[dict] = [
     {
@@ -154,6 +162,7 @@ class Copilot:
         self.use_rewriting = use_rewriting
         self.rewriter = LLMRewriter(self.llm) if self.llm else SynonymRewriter(tools.catalog)
         self._planner: SemanticPlanner | None = None
+        self._schema: str | None = None
 
     @property
     def mode(self) -> str:
@@ -166,6 +175,18 @@ class Copilot:
                 self.tools.catalog, load_dimension_values(self.tools.run_sql)
             )
         return self._planner
+
+    @property
+    def schema_text(self) -> str:
+        """A short list of every Gold table and its columns, so the model does not guess names."""
+        if self._schema is None:
+            lines = []
+            for table in self.tools.list_tables():
+                info = self.tools.describe_table(table["table"])
+                columns = ", ".join(c["name"] for c in info["columns"])
+                lines.append(f"- {info['table']} ({info['grain']}): {columns}")
+            self._schema = "\n".join(lines)
+        return self._schema
 
     # ------------------------------------------------------------ public
 
@@ -236,7 +257,12 @@ class Copilot:
     ) -> None:
         doc_text = "\n".join(f"[{d['id']}] {d['text']}" for d in docs)
         messages: list[dict] = [
-            {"role": "system", "content": SYSTEM_PROMPT.format(dialect=self.tools.engine.dialect)},
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT.format(
+                    dialect=self.tools.engine.dialect, schema=self.schema_text
+                ),
+            },
             *[{"role": m["role"], "content": m["content"]} for m in history[-6:]],
             {
                 "role": "user",
