@@ -8,12 +8,12 @@
 
 | Split | Query | Hit@1 | Hit@3 | Hit@5 | MRR@5 |
 |---|---|---|---|---|---|
-| dev | raw | 0.85 | 0.95 | 1.00 | 0.90 |
-| dev | rewritten | 0.85 | 0.95 | 1.00 | 0.90 |
+| dev | raw | 0.85 | 0.90 | 1.00 | 0.90 |
+| dev | rewritten | 0.85 | 0.90 | 1.00 | 0.90 |
 | test | raw | 0.85 | 0.90 | 0.95 | 0.89 |
 | test | rewritten | 0.85 | 0.95 | 1.00 | 0.91 |
-| all | raw | 0.85 | 0.93 | 0.97 | 0.90 |
-| all | rewritten | 0.85 | 0.95 | 1.00 | 0.91 |
+| all | raw | 0.85 | 0.90 | 0.97 | 0.89 |
+| all | rewritten | 0.85 | 0.93 | 1.00 | 0.91 |
 
 ## Text-to-SQL execution accuracy
 
@@ -23,7 +23,7 @@
 | test | 16/20 | 80% |
 | all | 36/40 | 90% |
 
-Median latency per question: 0.011 s
+Median latency per question: 0.012 s
 
 ## Per question
 

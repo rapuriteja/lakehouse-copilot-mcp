@@ -49,10 +49,10 @@
             "glossary:upi",
             "table:gold.fact_sales",
             "rule:data_quality",
-            "metric:order_count",
-            "glossary:cod"
+            "glossary:cod",
+            "metric:order_count"
           ],
-          "reciprocal_rank": 0.25
+          "reciprocal_rank": 0.2
         },
         {
           "id": "d05",
@@ -121,8 +121,8 @@
             "metric:active_customers",
             "glossary:customer_segment",
             "rule:customer_city_history",
-            "columns:gold.fact_sales:1",
-            "metric:net_revenue"
+            "columns:gold.dim_customer:1",
+            "columns:gold.fact_sales:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -146,7 +146,7 @@
             "metric:cancellation_rate",
             "metric:all_orders",
             "rule:revenue_recognition",
-            "columns:gold.agg_daily_sales:2"
+            "columns:gold.dim_date:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -168,11 +168,11 @@
           "retrieved": [
             "columns:gold.agg_daily_sales:1",
             "columns:gold.agg_daily_sales:2",
-            "metric:order_count",
             "table:gold.dim_date",
+            "metric:order_count",
             "metric:all_orders"
           ],
-          "reciprocal_rank": 0.3333333333333333
+          "reciprocal_rank": 0.25
         },
         {
           "id": "d15",
@@ -182,7 +182,7 @@
             "rule:revenue_recognition",
             "columns:gold.agg_monthly_category_sales:2",
             "metric:gross_margin",
-            "columns:gold.dim_product:1"
+            "columns:gold.agg_monthly_city_sales:2"
           ],
           "reciprocal_rank": 1.0
         },
@@ -249,15 +249,15 @@
       ],
       "raw": {
         "hit@1": 0.85,
-        "hit@3": 0.95,
+        "hit@3": 0.9,
         "hit@5": 1.0,
-        "mrr@5": 0.904
+        "mrr@5": 0.897
       },
       "rewritten": {
         "hit@1": 0.85,
-        "hit@3": 0.95,
+        "hit@3": 0.9,
         "hit@5": 1.0,
-        "mrr@5": 0.904
+        "mrr@5": 0.897
       }
     },
     "test": {
@@ -267,8 +267,8 @@
           "query": "How much money did we make in 2025 after discounts? (discount given)",
           "retrieved": [
             "metric:discount_amount",
-            "metric:average_discount_pct",
             "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
             "metric:net_revenue",
             "rule:festive_season_definition"
           ],
@@ -387,8 +387,8 @@
           "query": "Total discount given on Electronics in 2024.",
           "retrieved": [
             "metric:discount_amount",
-            "metric:average_discount_pct",
             "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
             "columns:gold.dim_product:1",
             "rule:festive_season_definition"
           ],
@@ -413,8 +413,8 @@
             "metric:gross_margin",
             "metric:active_customers",
             "metric:gross_margin_pct",
-            "glossary:customer_segment",
-            "columns:gold.agg_monthly_category_sales:2"
+            "columns:gold.agg_monthly_category_sales:2",
+            "glossary:customer_segment"
           ],
           "reciprocal_rank": 1.0
         },
@@ -459,10 +459,10 @@
           "query": "Which month of 2024 had the highest number of orders?",
           "retrieved": [
             "metric:order_count",
-            "columns:gold.agg_monthly_category_sales:1",
             "columns:gold.dim_date:1",
-            "columns:gold.dim_date:2",
-            "metric:returned_orders"
+            "columns:gold.agg_monthly_category_sales:1",
+            "metric:returned_orders",
+            "columns:gold.agg_monthly_city_sales:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -561,10 +561,10 @@
             "glossary:upi",
             "table:gold.fact_sales",
             "rule:data_quality",
-            "metric:order_count",
-            "glossary:cod"
+            "glossary:cod",
+            "metric:order_count"
           ],
-          "reciprocal_rank": 0.25
+          "reciprocal_rank": 0.2
         },
         {
           "id": "d05",
@@ -633,8 +633,8 @@
             "metric:active_customers",
             "glossary:customer_segment",
             "rule:customer_city_history",
-            "columns:gold.fact_sales:1",
-            "metric:net_revenue"
+            "columns:gold.dim_customer:1",
+            "columns:gold.fact_sales:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -658,7 +658,7 @@
             "metric:cancellation_rate",
             "metric:all_orders",
             "rule:revenue_recognition",
-            "columns:gold.agg_daily_sales:2"
+            "columns:gold.dim_date:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -680,11 +680,11 @@
           "retrieved": [
             "columns:gold.agg_daily_sales:1",
             "columns:gold.agg_daily_sales:2",
-            "metric:order_count",
             "table:gold.dim_date",
+            "metric:order_count",
             "metric:all_orders"
           ],
-          "reciprocal_rank": 0.3333333333333333
+          "reciprocal_rank": 0.25
         },
         {
           "id": "d15",
@@ -694,7 +694,7 @@
             "rule:revenue_recognition",
             "columns:gold.agg_monthly_category_sales:2",
             "metric:gross_margin",
-            "columns:gold.dim_product:1"
+            "columns:gold.agg_monthly_city_sales:2"
           ],
           "reciprocal_rank": 1.0
         },
@@ -763,8 +763,8 @@
           "query": "How much money did we make in 2025 after discounts? (discount given)",
           "retrieved": [
             "metric:discount_amount",
-            "metric:average_discount_pct",
             "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
             "metric:net_revenue",
             "rule:festive_season_definition"
           ],
@@ -883,8 +883,8 @@
           "query": "Total discount given on Electronics in 2024.",
           "retrieved": [
             "metric:discount_amount",
-            "metric:average_discount_pct",
             "columns:gold.fact_sales:3",
+            "metric:average_discount_pct",
             "columns:gold.dim_product:1",
             "rule:festive_season_definition"
           ],
@@ -909,8 +909,8 @@
             "metric:gross_margin",
             "metric:active_customers",
             "metric:gross_margin_pct",
-            "glossary:customer_segment",
-            "columns:gold.agg_monthly_category_sales:2"
+            "columns:gold.agg_monthly_category_sales:2",
+            "glossary:customer_segment"
           ],
           "reciprocal_rank": 1.0
         },
@@ -955,10 +955,10 @@
           "query": "Which month of 2024 had the highest number of orders?",
           "retrieved": [
             "metric:order_count",
-            "columns:gold.agg_monthly_category_sales:1",
             "columns:gold.dim_date:1",
-            "columns:gold.dim_date:2",
-            "metric:returned_orders"
+            "columns:gold.agg_monthly_category_sales:1",
+            "metric:returned_orders",
+            "columns:gold.agg_monthly_city_sales:1"
           ],
           "reciprocal_rank": 1.0
         },
@@ -1001,15 +1001,15 @@
       ],
       "raw": {
         "hit@1": 0.85,
-        "hit@3": 0.925,
+        "hit@3": 0.9,
         "hit@5": 0.975,
-        "mrr@5": 0.896
+        "mrr@5": 0.893
       },
       "rewritten": {
         "hit@1": 0.85,
-        "hit@3": 0.95,
+        "hit@3": 0.925,
         "hit@5": 1.0,
-        "mrr@5": 0.908
+        "mrr@5": 0.905
       }
     }
   },
@@ -1030,7 +1030,7 @@
         "correct": 36,
         "execution_accuracy": 0.9
       },
-      "median_latency_s": 0.011
+      "median_latency_s": 0.012
     },
     "per_question": [
       {
@@ -1040,7 +1040,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.044
+        "latency_s": 0.057
       },
       {
         "id": "d02",
@@ -1049,7 +1049,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.016
       },
       {
         "id": "d03",
@@ -1058,7 +1058,7 @@
         "correct": true,
         "predicted_sql": "SELECT c.city AS city, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY net_revenue DESC LIMIT 5",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.017
       },
       {
         "id": "d04",
@@ -1067,7 +1067,7 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.023
+        "latency_s": 0.022
       },
       {
         "id": "d05",
@@ -1085,7 +1085,7 @@
         "correct": true,
         "predicted_sql": "SELECT d.year_month AS year_month, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.013
       },
       {
         "id": "d07",
@@ -1094,7 +1094,7 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND d.is_festive_season = TRUE GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.014
       },
       {
         "id": "d08",
@@ -1103,7 +1103,7 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(100.0 * SUM(CASE WHEN f.is_revenue THEN f.margin_amount END) / SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS gross_margin_pct FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk GROUP BY 1 ORDER BY gross_margin_pct DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.013
+        "latency_s": 0.016
       },
       {
         "id": "d09",
@@ -1112,7 +1112,7 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS cancellation_rate FROM gold.fact_sales AS f GROUP BY 1 ORDER BY cancellation_rate DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.02
+        "latency_s": 0.022
       },
       {
         "id": "d10",
@@ -1121,7 +1121,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city = 'Chennai' LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.013
       },
       {
         "id": "d11",
@@ -1130,7 +1130,7 @@
         "correct": true,
         "predicted_sql": "SELECT d.year AS year, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year IN (2024, 2025) GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.012
       },
       {
         "id": "d12",
@@ -1139,7 +1139,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Cancelled' THEN f.order_id END), 2) AS cancelled_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.month = 10 LIMIT 200",
         "error": null,
-        "latency_s": 0.008
+        "latency_s": 0.012
       },
       {
         "id": "d13",
@@ -1148,7 +1148,7 @@
         "correct": true,
         "predicted_sql": "SELECT p.category AS category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE c.city_tier = 3 GROUP BY 1 ORDER BY units_sold DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.015
       },
       {
         "id": "d14",
@@ -1157,7 +1157,7 @@
         "correct": true,
         "predicted_sql": "SELECT d.day_name AS day_name, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.015
+        "latency_s": 0.022
       },
       {
         "id": "d15",
@@ -1166,7 +1166,7 @@
         "correct": true,
         "predicted_sql": "SELECT p.brand AS brand, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Fashion' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 3",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.016
       },
       {
         "id": "d16",
@@ -1175,7 +1175,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(100.0 * COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END) / COUNT(DISTINCT f.order_id), 2) AS return_rate FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.017
       },
       {
         "id": "d17",
@@ -1184,7 +1184,7 @@
         "correct": true,
         "predicted_sql": "SELECT f.channel AS channel, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.008
+        "latency_s": 0.01
       },
       {
         "id": "d18",
@@ -1193,7 +1193,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.margin_amount END), 2) AS gross_margin FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2025 AND c.segment = 'Premium' LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.012
       },
       {
         "id": "d19",
@@ -1211,7 +1211,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 AND c.region = 'South' LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.012
       },
       {
         "id": "t01",
@@ -1220,7 +1220,7 @@
         "correct": false,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 LIMIT 200",
         "error": null,
-        "latency_s": 0.008
+        "latency_s": 0.01
       },
       {
         "id": "t02",
@@ -1229,7 +1229,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND f.channel = 'Web' LIMIT 200",
         "error": null,
-        "latency_s": 0.013
+        "latency_s": 0.012
       },
       {
         "id": "t03",
@@ -1238,7 +1238,7 @@
         "correct": true,
         "predicted_sql": "SELECT c.state AS state, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY net_revenue DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.016
+        "latency_s": 0.017
       },
       {
         "id": "t04",
@@ -1247,7 +1247,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.gross_amount END), 2) AS gross_merchandise_value FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 AND d.is_festive_season = TRUE LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.009
       },
       {
         "id": "t05",
@@ -1256,7 +1256,7 @@
         "correct": true,
         "predicted_sql": "SELECT c.segment AS segment, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.029
+        "latency_s": 0.028
       },
       {
         "id": "t06",
@@ -1265,7 +1265,7 @@
         "correct": false,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f WHERE f.payment_method = 'COD' LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.012
       },
       {
         "id": "t07",
@@ -1274,7 +1274,7 @@
         "correct": false,
         "predicted_sql": "SELECT p.product_name AS product_name, ROUND(SUM(CASE WHEN f.is_revenue THEN f.quantity END), 2) AS units_sold FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 GROUP BY 1 ORDER BY units_sold DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.015
+        "latency_s": 0.017
       },
       {
         "id": "t08",
@@ -1283,7 +1283,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN c.customer_id END), 2) AS active_customers FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.013
+        "latency_s": 0.012
       },
       {
         "id": "t09",
@@ -1292,7 +1292,7 @@
         "correct": true,
         "predicted_sql": "SELECT d.quarter AS quarter, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2025 GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.011
+        "latency_s": 0.014
       },
       {
         "id": "t10",
@@ -1301,7 +1301,7 @@
         "correct": true,
         "predicted_sql": "SELECT c.region AS region, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END) / COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS average_order_value FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk GROUP BY 1 ORDER BY average_order_value ASC LIMIT 1",
         "error": null,
-        "latency_s": 0.02
+        "latency_s": 0.028
       },
       {
         "id": "t11",
@@ -1310,7 +1310,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(SUM(CASE WHEN f.is_revenue THEN f.discount_amount END), 2) AS discount_amount FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2024 AND p.category = 'Electronics' LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.008
       },
       {
         "id": "t12",
@@ -1319,7 +1319,7 @@
         "correct": true,
         "predicted_sql": "SELECT c.city_tier AS city_tier, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk WHERE c.city_tier IN (1, 2) GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.009
+        "latency_s": 0.01
       },
       {
         "id": "t13",
@@ -1337,7 +1337,7 @@
         "correct": true,
         "predicted_sql": "SELECT ROUND(COUNT(DISTINCT CASE WHEN f.order_status = 'Returned' THEN f.order_id END), 2) AS returned_orders FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.009
       },
       {
         "id": "t15",
@@ -1346,7 +1346,7 @@
         "correct": false,
         "predicted_sql": "SELECT d.date AS date, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 AND d.is_diwali = TRUE GROUP BY 1 ORDER BY 1 LIMIT 200",
         "error": null,
-        "latency_s": 0.008
+        "latency_s": 0.01
       },
       {
         "id": "t16",
@@ -1355,7 +1355,7 @@
         "correct": true,
         "predicted_sql": "SELECT f.payment_method AS payment_method, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE p.category = 'Grocery' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.01
+        "latency_s": 0.011
       },
       {
         "id": "t17",
@@ -1364,7 +1364,7 @@
         "correct": true,
         "predicted_sql": "SELECT d.year_month AS year_month, ROUND(COUNT(DISTINCT CASE WHEN f.is_revenue THEN f.order_id END), 2) AS order_count FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key WHERE d.year = 2024 GROUP BY 1 ORDER BY order_count DESC LIMIT 1",
         "error": null,
-        "latency_s": 0.015
+        "latency_s": 0.012
       },
       {
         "id": "t18",
@@ -1391,7 +1391,7 @@
         "correct": true,
         "predicted_sql": "SELECT p.sub_category AS sub_category, ROUND(SUM(CASE WHEN f.is_revenue THEN f.net_amount END), 2) AS net_revenue FROM gold.fact_sales AS f JOIN gold.dim_date AS d ON f.date_key = d.date_key JOIN gold.dim_customer AS c ON f.customer_sk = c.customer_sk JOIN gold.dim_product AS p ON f.product_sk = p.product_sk WHERE d.year = 2025 AND c.city = 'Hyderabad' GROUP BY 1 ORDER BY net_revenue DESC LIMIT 200",
         "error": null,
-        "latency_s": 0.012
+        "latency_s": 0.011
       }
     ]
   }
