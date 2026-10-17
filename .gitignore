@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env
+
+# Generated data and lakehouse output (rebuilt by `lhc generate` and `lhc pipeline`)
+data/raw/
+lakehouse/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl.bak
+
+# Databricks bundle
+.databricks/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
